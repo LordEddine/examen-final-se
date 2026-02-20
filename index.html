@@ -1,0 +1,1809 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OPÉRATION BLACKOUT-Ω — CERT-QC</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- ============================================ -->
+    <!-- BOOT SCREEN                                  -->
+    <!-- ============================================ -->
+    <div id="screen-boot" class="screen active">
+        <div class="boot-container">
+            <pre class="boot-ascii" id="boot-ascii"></pre>
+            <div class="boot-text" id="boot-text"></div>
+            <div class="boot-progress">
+                <div class="boot-progress-bar" id="boot-progress-bar"></div>
+            </div>
+            <div class="boot-status" id="boot-status">INITIALISATION DES SYSTÈMES...</div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- LOGIN SCREEN                                 -->
+    <!-- ============================================ -->
+    <div id="screen-login" class="screen">
+        <div class="login-container">
+            <div class="login-header">
+                <div class="facility-logo">🔴</div>
+                <h1>CERT-QC</h1>
+                <p class="subtitle">COMPUTER EMERGENCY RESPONSE TEAM — QUÉBEC</p>
+                <p class="classified">▓▓ ACCÈS RESTREINT — OPÉRATION BLACKOUT-Ω ▓▓</p>
+                <p class="login-warning" style="color: #ff3b3b; font-size: 0.85rem; margin-top: 12px; padding: 10px; border: 1px solid #ff3b3b; background: rgba(255,59,59,0.1); text-align: center; line-height: 1.5;">⚠️ ATTENTION : Entrez votre nom, prénom et numéro d'étudiant <strong>correctement du premier coup</strong>. Aucune correction possible après validation. Le système n'enregistrera pas l'examen en cas d'erreur.</p>
+            </div>
+            <div class="login-box">
+                <div class="login-field">
+                    <label>NOM :</label>
+                    <input type="text" id="agent-nom" placeholder="Votre nom de famille" autocomplete="off" spellcheck="false">
+                </div>
+                <div class="login-field">
+                    <label>PRÉNOM :</label>
+                    <input type="text" id="agent-prenom" placeholder="Votre prénom" autocomplete="off" spellcheck="false">
+                </div>
+                <div class="login-field">
+                    <label>NUMÉRO D'ÉTUDIANT :</label>
+                    <input type="text" id="agent-numero" placeholder="Ex: 1234567" autocomplete="off" spellcheck="false" maxlength="10">
+                </div>
+                <button id="btn-login" class="btn-terminal" disabled>
+                    <span class="btn-text">[ ACCÈS REFUSÉ ]</span>
+                </button>
+                <p class="login-hint" id="login-hint"></p>
+            </div>
+            <div class="login-footer">
+                <p>OPÉRATION BLACKOUT-Ω // CERT-QC // MONTRÉAL // NE PAS DISTRIBUER</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- MAIN INTERFACE                               -->
+    <!-- ============================================ -->
+    <div id="screen-main" class="screen">
+
+        <!-- TOP BAR -->
+        <header class="top-bar">
+            <div class="top-left">
+                <span class="facility-badge">🔴 CERT-QC</span>
+                <span class="separator">|</span>
+                <span class="operation-name">OPÉRATION BLACKOUT-Ω</span>
+                <span class="separator">|</span>
+                <button class="btn-topbar" id="btn-contexte" title="Contexte de l'opération">📖 CONTEXTE</button>
+                <button class="btn-topbar" id="btn-info-utile" title="Informations utiles">📚 INFO UTILE</button>
+                <button class="btn-topbar btn-bareme" id="btn-bareme" title="Barème de l'examen">📊 BARÈME</button>
+            </div>
+            <div class="top-center">
+                <div class="timer-display">
+                    <span class="timer-label">TEMPS RESTANT</span>
+                    <span class="timer-value" id="main-timer">04:30:00</span>
+                </div>
+            </div>
+            <div class="top-right">
+                <span class="agent-badge" id="agent-badge">AGENT: ---</span>
+                <span class="clearance" id="clearance-badge">NIVEAU 0</span>
+                <button class="btn-sound" id="btn-sound" title="Activer/Couper le son">🔇</button>
+                <button class="btn-topbar btn-fin-examen" id="btn-fin-examen" title="Terminer l'examen et se déconnecter">🚪 FIN EXAMEN</button>
+            </div>
+            <audio id="ambiance-audio" loop preload="auto">
+                <source src="assets/ambiance.mp3" type="audio/mpeg">
+            </audio>
+        </header>
+
+        <!-- CONTENT AREA -->
+        <div class="main-content">
+
+            <!-- SIDEBAR -->
+            <aside class="sidebar">
+                <div class="sidebar-section">
+                    <h3>📡 MISSIONS</h3>
+                    <nav class="mission-nav">
+                        <button class="nav-btn active" data-level="briefing" id="nav-briefing">
+                            <span class="nav-icon">📋</span>
+                            <span class="nav-label">BRIEFING</span>
+                            <span class="nav-status status-available">●</span>
+                        </button>
+                        <button class="nav-btn locked" data-level="level0" id="nav-level0">
+                            <span class="nav-icon">📐</span>
+                            <span class="nav-label">NIV.0 — THÉORIE</span>
+                            <span class="nav-status status-locked">🔒</span>
+                        </button>
+                        <button class="nav-btn locked" data-level="level1" id="nav-level1">
+                            <span class="nav-icon">🔍</span>
+                            <span class="nav-label">NIV.1 — LOGS</span>
+                            <span class="nav-status status-locked">🔒</span>
+                        </button>
+                        <button class="nav-btn locked" data-level="level2" id="nav-level2">
+                            <span class="nav-icon">🌐</span>
+                            <span class="nav-label">NIV.2 — RÉSEAU</span>
+                            <span class="nav-status status-locked">🔒</span>
+                        </button>
+                        <button class="nav-btn locked" data-level="level3" id="nav-level3">
+                            <span class="nav-icon">🐳</span>
+                            <span class="nav-label">NIV.3 — GIT/DOCKER</span>
+                            <span class="nav-status status-locked">🔒</span>
+                        </button>
+                        <button class="nav-btn locked" data-level="level4" id="nav-level4">
+                            <span class="nav-icon">🔢</span>
+                            <span class="nav-label">NIV.4 — HEX/DNS</span>
+                            <span class="nav-status status-locked">🔒</span>
+                        </button>
+                        <button class="nav-btn locked" data-level="level5" id="nav-level5">
+                            <span class="nav-icon">🛡️</span>
+                            <span class="nav-label">NIV.5 — SCRIPTS</span>
+                            <span class="nav-status status-locked">🔒</span>
+                        </button>
+                        <button class="nav-btn locked" data-level="level6" id="nav-level6">
+                            <span class="nav-icon">📝</span>
+                            <span class="nav-label">NIV.6 — RAPPORT</span>
+                            <span class="nav-status status-locked">🔒</span>
+                        </button>
+                    </nav>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3>📁 FICHIERS LOGS</h3>
+                    <div class="file-explorer">
+                        <div class="folder-item" id="folder-logs">
+                            <span class="folder-toggle">▼</span>
+                            <span class="folder-name">logs_blackout/</span>
+                        </div>
+                        <div class="file-list" id="file-list-logs">
+                            <div class="file-item" data-file="logs_blackout/pare_feu.log">
+                                <span class="file-icon">📄</span>
+                                <span class="file-name">pare_feu.log</span>
+                            </div>
+                            <div class="file-item" data-file="logs_blackout/arp_poison.log">
+                                <span class="file-icon">📄</span>
+                                <span class="file-name">arp_poison.log</span>
+                            </div>
+                            <div class="file-item" data-file="logs_blackout/icmp_tunnel.log">
+                                <span class="file-icon">📄</span>
+                                <span class="file-name">icmp_tunnel.log</span>
+                            </div>
+                            <div class="file-item" data-file="logs_blackout/dns_hex.log">
+                                <span class="file-icon">📄</span>
+                                <span class="file-name">dns_hex.log</span>
+                            </div>
+                            <div class="file-item" data-file="logs_blackout/scada_alerte.log">
+                                <span class="file-icon">📄</span>
+                                <span class="file-name">scada_alerte.log</span>
+                            </div>
+                            <div class="file-item" data-file="logs_blackout/table_routage.txt">
+                                <span class="file-icon">📄</span>
+                                <span class="file-name">table_routage.txt</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3>� SCRIPTS À TÉLÉCHARGER</h3>
+                    <div class="download-list">
+                        <button class="download-item" data-script="generer_logs_blackout.sh">
+                            <span class="download-icon">📜</span>
+                            <span class="download-info">
+                                <span class="download-name">generer_logs_blackout.sh</span>
+                                <span class="download-desc">Génère tous les fichiers logs</span>
+                            </span>
+                            <span class="download-arrow">⬇</span>
+                        </button>
+                        <button class="download-item" data-script="simulateur_blackout.sh">
+                            <span class="download-icon">🎬</span>
+                            <span class="download-info">
+                                <span class="download-name">simulateur_blackout.sh</span>
+                                <span class="download-desc">Simulation live de l'attaque</span>
+                            </span>
+                            <span class="download-arrow">⬇</span>
+                        </button>
+
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3>�🔑 CODE D'ACCÈS</h3>
+                    <div class="unlock-box">
+                        <input type="text" id="unlock-code" placeholder="Code numérique..." autocomplete="off" spellcheck="false">
+                        <button id="btn-unlock" class="btn-terminal-sm">DÉVERROUILLER</button>
+                    </div>
+                    <p class="unlock-hint" id="unlock-hint"></p>
+                </div>
+
+                <div class="sidebar-section radio-section">
+                    <h3>📻 RADIO COMMS</h3>
+                    <div class="radio-feed" id="radio-feed">
+                        <div class="radio-msg">
+                            <span class="radio-time">23:58</span>
+                            <span class="radio-text">Système CERT-QC en ligne. En attente du briefing...</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- MAIN PANEL -->
+            <main class="main-panel" id="main-panel">
+
+                <!-- ======================================== -->
+                <!-- BRIEFING                                 -->
+                <!-- ======================================== -->
+                <section class="level-content" id="content-briefing">
+                    <div class="content-header">
+                        <h2>📋 BRIEFING — OPÉRATION BLACKOUT-Ω</h2>
+                        <div class="classification">SECRET — CERT-QC — DIFFUSION RESTREINTE</div>
+                    </div>
+                    <div class="terminal-box">
+                        <div class="terminal-header">
+                            <span class="terminal-dot red"></span>
+                            <span class="terminal-dot yellow"></span>
+                            <span class="terminal-dot green"></span>
+                            <span class="terminal-title">alerte_certqc.log</span>
+                        </div>
+                        <div class="terminal-body" id="briefing-text"></div>
+                    </div>
+                    <div class="info-cards" id="briefing-cards" style="display:none;">
+                        <div class="info-card">
+                            <div class="card-icon">📅</div>
+                            <div class="card-title">DATE</div>
+                            <div class="card-value">14 mars 2026, 23h58</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="card-icon">📍</div>
+                            <div class="card-title">LIEU</div>
+                            <div class="card-value">Montréal, Québec</div>
+                        </div>
+                        <div class="info-card alert">
+                            <div class="card-icon">⚠️</div>
+                            <div class="card-title">MENACE</div>
+                            <div class="card-value">Groupe VANTABLACK</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="card-icon">🎯</div>
+                            <div class="card-title">CIBLES</div>
+                            <div class="card-value">SCADA, CHUM, Eau, Trafic</div>
+                        </div>
+                    </div>
+                    <div class="mission-brief" id="briefing-mission" style="display:none;">
+                        <h3>🎯 VOTRE MISSION</h3>
+                        <p>Analyser les 6 fichiers de logs, identifier les techniques d'attaque de VANTABLACK, et neutraliser la menace avant qu'elle ne compromette les systèmes critiques de Montréal.</p>
+                        <p class="warning-text">⚠️ Entrez le code d'accès ci-dessous pour débuter le Niveau 0.</p>
+                    </div>
+                    <div class="code-reveal hidden" id="code-reveal-briefing">
+                        <div class="code-reveal-box">
+                            <div class="code-reveal-label">🔑 CODE D'ACCÈS — NIVEAU 0</div>
+                            <div class="code-reveal-value" id="code-value-briefing"></div>
+                            <div class="code-reveal-hint">Entrez ce code dans la section « Code d'accès » de la barre latérale</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ======================================== -->
+                <!-- LEVEL 0 — Théorie Réseau                -->
+                <!-- ======================================== -->
+                <section class="level-content hidden" id="content-level0">
+                    <div class="content-header">
+                        <h2>📐 NIVEAU 0 — QCM THÉORIQUE : RÉSEAUX, GIT ET DOCKER (30 min)</h2>
+                        <div class="classification">EXAMEN THÉORIQUE — TOUTES LES QUESTIONS SONT OBLIGATOIRES</div>
+                    </div>
+                    <div class="comm-message">
+                        <div class="comm-sender">📨 MSG DE : Commandant CERT-QC</div>
+                        <div class="comm-body">
+                            <p>« Avant de plonger dans les logs, vous devez démontrer vos connaissances théoriques. Répondez à <strong>TOUTES</strong> les questions. Si vous ne connaissez pas la réponse, sélectionnez « Je ne sais pas ». Aucun résultat ne sera affiché — votre note QCM sera calculée à la fin de l'examen. »</p>
+                        </div>
+                    </div>
+
+                    <!-- ═══ THÉORIE : RÉSEAUX ═══ -->
+                    <div class="mission-block">
+                        <h3>📐 Modèle OSI vs TCP/IP</h3>
+                        <div class="context-box">
+                            Le <strong>modèle OSI</strong> divise les communications en <strong>7 couches</strong>. Le <strong>modèle TCP/IP</strong> utilisé en pratique les regroupe en <strong>4 niveaux</strong>.
+                        </div>
+                        <div class="code-display">
+<pre>Modèle OSI        Modèle TCP/IP    Exemples
+──────────────    ─────────────    ──────────────────────
+7 - Application                    HTTP, DNS, SSH, SMTP
+6 - Présentation   Application     TLS/SSL
+5 - Session                        Gestion des connexions
+4 - Transport      Transport       TCP (fiable), UDP (rapide)
+3 - Réseau         Internet        IP, ICMP, ARP
+2 - Liaison        Accès réseau    Ethernet, MAC addresses
+1 - Physique                       Câbles, Wi-Fi</pre>
+                        </div>
+                    </div>
+
+                    <div class="mission-block">
+                        <h3>🔵 Protocole ARP — Résolution IP → MAC</h3>
+                        <div class="context-box">
+                            <strong>ARP (Address Resolution Protocol)</strong> convertit une adresse IP en adresse MAC sur un réseau local. <strong>ARP Poisoning</strong> : L'attaquant envoie de fausses réponses ARP pour intercepter le trafic (attaque MITM).
+                        </div>
+                    </div>
+
+                    <div class="mission-block">
+                        <h3>🟠 Protocole ICMP — Tunnel de commandes</h3>
+                        <div class="context-box">
+                            <strong>ICMP</strong> est le protocole utilisé par <code>ping</code>. Un ping normal fait 32–84 octets. Un <strong>tunnel ICMP</strong> cache des données/commandes dans des paquets ICMP surdimensionnés (payload > 1000 octets).
+                        </div>
+                    </div>
+
+                    <div class="mission-block">
+                        <h3>🟢 Sous-réseaux — Notation CIDR</h3>
+                        <div class="context-box">
+                            La notation CIDR indique combien de bits sont réservés au réseau. Ex: <code>/24</code> = masque <code>255.255.255.0</code> = 254 hôtes utilisables. <code>/16</code> = masque <code>255.255.0.0</code> = 65 534 hôtes. <code>/8</code> = masque <code>255.0.0.0</code> = 16 777 214 hôtes.
+                        </div>
+                        <table class="data-table">
+                            <thead><tr><th>Réseau</th><th>CIDR</th><th>Masque</th><th>Nb hôtes</th></tr></thead>
+                            <tbody>
+                                <tr><td>Réseau Admin</td><td>10.100.1.0/24</td><td>255.255.255.0</td><td>254</td></tr>
+                                <tr><td>Réseau SCADA</td><td>10.100.2.0/24</td><td>255.255.255.0</td><td>254</td></tr>
+                                <tr><td>Réseau CHUM</td><td>10.100.3.0/24</td><td>255.255.255.0</td><td>254</td></tr>
+                                <tr><td>Réseau Ville</td><td>10.100.0.0/16</td><td>255.255.0.0</td><td>65 534</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- ═══ THÉORIE : GIT & GITHUB ═══ -->
+                    <div class="mission-block">
+                        <h3>🌿 Git — Gestion de versions</h3>
+                        <div class="context-box">
+                            <strong>Git</strong> est un système de contrôle de version distribué. Il permet de sauvegarder, suivre et fusionner les modifications du code source.
+                        </div>
+                        <table class="data-table">
+                            <thead><tr><th>Concept</th><th>Définition</th></tr></thead>
+                            <tbody>
+                                <tr><td>Repository</td><td>Dossier contenant le code + historique complet</td></tr>
+                                <tr><td>Commit</td><td>Sauvegarde locale de l'état du code à un instant</td></tr>
+                                <tr><td>Branch</td><td>Ligne de développement parallèle et indépendante</td></tr>
+                                <tr><td>Push</td><td>Envoyer ses commits vers le serveur distant</td></tr>
+                                <tr><td>Pull</td><td>Récupérer les derniers commits depuis le serveur</td></tr>
+                                <tr><td>Merge</td><td>Fusionner deux branches ensemble</td></tr>
+                                <tr><td>Clone</td><td>Copier un repository distant en local</td></tr>
+                                <tr><td>Fork</td><td>Copie personnelle d'un repository sur GitHub</td></tr>
+                                <tr><td>Pull Request</td><td>Demande de fusion d'une branche dans une autre</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- ═══ THÉORIE : DOCKER ═══ -->
+                    <div class="mission-block">
+                        <h3>🐳 Docker — Conteneurs</h3>
+                        <div class="context-box">
+                            <strong>Docker</strong> permet d'exécuter des applications dans des <strong>conteneurs</strong> isolés qui partagent le noyau de la machine hôte, contrairement aux machines virtuelles qui ont leur propre noyau.
+                        </div>
+                        <table class="data-table">
+                            <thead><tr><th>Terme</th><th>Définition</th></tr></thead>
+                            <tbody>
+                                <tr><td>Image</td><td>Modèle (template) en lecture seule pour créer un conteneur</td></tr>
+                                <tr><td>Conteneur</td><td>Instance en cours d'exécution d'une image</td></tr>
+                                <tr><td>Dockerfile</td><td>Fichier de recette décrivant la construction d'une image</td></tr>
+                                <tr><td>Registry</td><td>Entrepôt d'images (ex: Docker Hub)</td></tr>
+                                <tr><td>Volume</td><td>Stockage persistant partagé entre conteneur et hôte</td></tr>
+                            </tbody>
+                        </table>
+                        <div class="code-display">
+<pre>Machine Virtuelle           Conteneur Docker
+──────────────────          ────────────────────
+Noyau OS complet            Partage le noyau de l'hôte
+Démarrage en minutes        Démarrage en secondes
+Isolation forte             Isolation plus légère
+500 Mo à 10 Go              50 Mo à 500 Mo</pre>
+                        </div>
+                    </div>
+
+                    <!-- ═══ QCM LEVEL 0 ═══ -->
+                    <div class="quiz-panel qcm-panel" id="quiz-level0">
+                        <h3>📋 QCM THÉORIQUE — Niveau 0</h3>
+                        <p class="quiz-desc">Répondez à <strong>toutes</strong> les questions ci-dessous. Sélectionnez « Je ne sais pas » si nécessaire.<br>Aucun résultat ne sera affiché. Votre note QCM sera calculée à la fin de l'examen.</p>
+
+                        <!-- SECTION A — Réseaux et Protocoles -->
+                        <h4 class="qcm-section-title">SECTION A — Réseaux et Protocoles</h4>
+
+                        <div class="qcm-item" data-qcm="q0-1">
+                            <p class="qcm-question">1. Combien de couches possède le modèle OSI ?</p>
+                            <div class="qcm-options">
+                                <label><input type="radio" name="q0-1" value="a"> a) 4</label>
+                                <label><input type="radio" name="q0-1" value="b"> b) 5</label>
+                                <label><input type="radio" name="q0-1" value="c"> c) 7</label>
+                                <label><input type="radio" name="q0-1" value="d"> d) 3</label>
+                                <label class="qcm-na"><input type="radio" name="q0-1" value="na"> Je ne sais pas</label>
+                            </div>
+                        </div>
+
+                        <div class="qcm-item" data-qcm="q0-2">
+                            <p class="qcm-question">2. À quelle couche OSI fonctionne le protocole ARP ?</p>
+                            <div class="qcm-options">
+                                <label><input type="radio" name="q0-2" value="a"> a) Couche 1 — Physique</label>
+                                <label><input type="radio" name="q0-2" value="b"> b) Couche 2 — Liaison</label>
+                                <label><input type="radio" name="q0-2" value="c"> c) Couche 3 — Réseau</label>
+                                <label><input type="radio" name="q0-2" value="d"> d) Couche 4 — Transport</label>
+                                <label class="qcm-na"><input type="radio" name="q0-2" value="na"> Je ne sais pas</label>
+                            </div>
+                        </div>
+
+                        <div class="qcm-item" data-qcm="q0-3">
+                            <p class="qcm-question">3. Quel protocole est utilisé par la commande <code>ping</code> ?</p>
+                            <div class="qcm-options">
+                                <label><input type="radio" name="q0-3" value="a"> a) TCP</label>
+                                <label><input type="radio" name="q0-3" value="b"> b) UDP</label>
+                                <label><input type="radio" name="q0-3" value="c"> c) ICMP</label>
+                                <label><input type="radio" name="q0-3" value="d"> d) ARP</label>
+                                <label class="qcm-na"><input type="radio" name="q0-3" value="na"> Je ne sais pas</label>
+                            </div>
+                        </div>
+
+                        <div class="qcm-item" data-qcm="q0-4">
+                            <p class="qcm-question">4. Quel est le masque de sous-réseau correspondant à un /24 ?</p>
+                            <div class="qcm-options">
+                                <label><input type="radio" name="q0-4" value="a"> a) 255.255.0.0</label>
+                                <label><input type="radio" name="q0-4" value="b"> b) 255.255.255.0</label>
+                                <label><input type="radio" name="q0-4" value="c"> c) 255.0.0.0</label>
+                                <label><input type="radio" name="q0-4" value="d"> d) 255.255.255.128</label>
+                                <label class="qcm-na"><input type="radio" name="q0-4" value="na"> Je ne sais pas</label>
+                            </div>
+                        </div>
+
+                        <div class="qcm-item" data-qcm="q0-5">
+                            <p class="qcm-question">5. Combien d'hôtes utilisables peuvent exister dans un réseau /24 ?</p>
+                            <div class="qcm-options">
+                                <label><input type="radio" name="q0-5" value="a"> a) 256</label>
+                                <label><input type="radio" name="q0-5" value="b"> b) 254</label>
+                                <label><input type="radio" name="q0-5" value="c"> c) 255</label>
+                                <label><input type="radio" name="q0-5" value="d"> d) 128</label>
+                                <label class="qcm-na"><input type="radio" name="q0-5" value="na"> Je ne sais pas</label>
+                            </div>
+                        </div>
+
+                        <div class="qcm-item" data-qcm="q0-6">
+                            <p class="qcm-question">6. Quelle affirmation est vraie concernant le protocole TCP ?</p>
+                            <div class="qcm-options">
+                                <label><input type="radio" name="q0-6" value="a"> a) TCP est un protocole fiable avec accusé de réception</label>
+                                <label><input type="radio" name="q0-6" value="b"> b) TCP est un protocole non fiable sans connexion</label>
+                                <label><input type="radio" name="q0-6" value="c"> c) TCP est uniquement utilisé pour le streaming vidéo</label>
+                                <label><input type="radio" name="q0-6" value="d"> d) TCP ne fonctionne que sur le port 80</label>
+                                <label class="qcm-na"><input type="radio" name="q0-6" value="na"> Je ne sais pas</label>
+                            </div>
+                        </div>
+
+                        <div class="qcm-item" data-qcm="q0-7">
+                            <p class="qcm-question">7. Qu'est-ce que l'ARP Poisoning ?</p>
+                            <div class="qcm-options">
+                                <label><input type="radio" name="q0-7" value="a"> a) Modifier les fichiers de configuration d'un routeur</label>
+                                <label><input type="radio" name="q0-7" value="b"> b) Bloquer toutes les connexions réseau</label>
+                                <label><input type="radio" name="q0-7" value="c"> c) Envoyer de fausses réponses ARP pour intercepter le trafic (MITM)</label>
+                                <label><input type="radio" name="q0-7" value="d"> d) Augmenter la vitesse du réseau local</label>
+                                <label class="qcm-na"><input type="radio" name="q0-7" value="na"> Je ne sais pas</label>
+                            </div>
+                        </div>
+
+                        <div class="qcm-item" data-qcm="q0-8">
+                            <p class="qcm-question">8. Qu'est-ce qu'un tunnel ICMP ?</p>
+                            <div class="qcm-options">
+                                <label><input type="radio" name="q0-8" value="a"> a) Un tunnel VPN qui utilise le protocole ICMP pour se connecter</label>
+                                <label><input type="radio" name="q0-8" value="b"> b) L'exfiltration de données cachées dans des paquets ICMP surdimensionnés</label>
+                                <label><input type="radio" name="q0-8" value="c"> c) Un protocole de routage utilisé par les routeurs</label>
+                                <label><input type="radio" name="q0-8" value="d"> d) Un outil de diagnostic réseau du système Windows</label>
+                                <label class="qcm-na"><input type="radio" name="q0-8" value="na"> Je ne sais pas</label>
+                            </div>
+                        </div>
+
+                        <div class="qcm-item" data-qcm="q0-9">
+                            <p class="qcm-question">9. Le modèle TCP/IP regroupe les communications en combien de couches ?</p>
+                            <div class="qcm-options">
+                                <label><input type="radio" name="q0-9" value="a"> a) 7</label>
+                                <label><input type="radio" name="q0-9" value="b"> b) 4</label>
+                                <label><input type="radio" name="q0-9" value="c"> c) 5</label>
+                                <label><input type="radio" name="q0-9" value="d"> d) 3</label>
+                                <label class="qcm-na"><input type="radio" name="q0-9" value="na"> Je ne sais pas</label>
+                            </div>
+                        </div>
+
+                        <div class="qcm-item" data-qcm="q0-10">
+                            <p class="qcm-question">10. Quelle couche OSI gère l'adressage IP ?</p>
+                            <div class="qcm-options">
+                                <label><input type="radio" name="q0-10" value="a"> a) Couche 1 — Physique</label>
+                                <label><input type="radio" name="q0-10" value="b"> b) Couche 2 — Liaison</label>
+                                <label><input type="radio" name="q0-10" value="c"> c) Couche 3 — Réseau</label>
+                                <label><input type="radio" name="q0-10" value="d"> d) Couche 7 — Application</label>
+                                <label class="qcm-na"><input type="radio" name="q0-10" value="na"> Je ne sais pas</label>
+                            </div>
+                        </div>
+
+                        <!-- SECTION B — Adressage IP (Tableau à compléter) -->
+                        <h4 class="qcm-section-title">SECTION B — Adressage IP (Tableau à compléter)</h4>
+                        <p class="qcm-table-desc">Complétez les champs manquants du tableau d'adressage. Écrivez « N/A » si vous ne connaissez pas la réponse.</p>
+                        <table class="data-table qcm-fill-table">
+                            <thead><tr><th>Réseau</th><th>CIDR</th><th>Masque</th><th>Nb hôtes utilisables</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td>192.168.1.0</td>
+                                    <td>/24</td>
+                                    <td><input type="text" class="qcm-fill" name="fill-0-1" placeholder="Masque ?"></td>
+                                    <td><input type="text" class="qcm-fill" name="fill-0-2" placeholder="Nb hôtes ?"></td>
+                                </tr>
+                                <tr>
+                                    <td>10.0.0.0</td>
+                                    <td>/8</td>
+                                    <td><input type="text" class="qcm-fill" name="fill-0-3" placeholder="Masque ?"></td>
+                                    <td><input type="text" class="qcm-fill" name="fill-0-4" placeholder="Nb hôtes ?"></td>
+                                </tr>
+                                <tr>
+                                    <td>172.16.0.0</td>
+                                    <td>/16</td>
+                                    <td><input type="text" class="qcm-fill" name="fill-0-5" placeholder="Masque ?"></td>
+                                    <td><input type="text" class="qcm-fill" name="fill-0-6" placeholder="Nb hôtes ?"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <!-- SECTION C — Git et GitHub -->
+                        <h4 class="qcm-section-title">SECTION C — Git et GitHub</h4>
+
+                        <div class="qcm-item" data-qcm="q0-11">
+                            <p class="qcm-question">11. Qu'est-ce qu'un repository Git ?</p>
+                            <div class="qcm-options">
+                                <label><input type="radio" name="q0-11" value="a"> a) Un logiciel pour naviguer sur Internet</label>
+                                <label><input type="radio" name="q0-11" value="b"> b) Un dossier contenant le code source et tout son historique de versions</label>
+                                <label><input type="radio" name="q0-11" value="c"> c) Un serveur de base de données</label>
+                                <label class="qcm-na"><input type="radio" name="q0-11" value="na"> Je ne sais pas</label>
+                            </div>
+                        </div>
+
+                        <div class="qcm-item" data-qcm="q0-12">
+                            <p class="qcm-question">12. Que fait la commande <code>git commit</code> ?</p>
+                            <div class="qcm-options">
+                                <label><input type="radio" name="q0-12" value="a"> a) Envoie le code vers le serveur distant</label>
+                                <label><input type="radio" name="q0-12" value="b"> b) Crée une branche de développement</label>
+                                <label><input type="radio" name="q0-12" value="c"> c) Sauvegarde l'état actuel du code dans l'historique local</label>
+                                <label class="qcm-na"><input type="radio" name="q0-12" value="na"> Je ne sais pas</label>
+                            </div>
+                        </div>
+
+                        <div class="qcm-item" data-qcm="q0-13">
+                            <p class="qcm-question">13. Quelle est la différence entre <code>git push</code> et <code>git pull</code> ?</p>
+                            <div class="qcm-options">
+                                <label><input type="radio" name="q0-13" value="a"> a) push envoie les commits vers le serveur distant, pull les récupère</label>
+                                <label><input type="radio" name="q0-13" value="b"> b) push fusionne des branches, pull les supprime</label>
+                                <label><input type="radio" name="q0-13" value="c"> c) Aucune différence, ce sont des synonymes</label>
+                                <label class="qcm-na"><input type="radio" name="q0-13" value="na"> Je ne sais pas</label>
+                            </div>
+                        </div>
+
+                        <div class="qcm-item" data-qcm="q0-14">
+                            <p class="qcm-question">14. Qu'est-ce qu'une branche Git ?</p>
+                            <div class="qcm-options">
+                                <label><input type="radio" name="q0-14" value="a"> a) Un fichier de configuration</label>
+                                <label><input type="radio" name="q0-14" value="b"> b) Une ligne de développement parallèle</label>
+                                <label><input type="radio" name="q0-14" value="c"> c) Une copie de la base de données</label>
+                                <label class="qcm-na"><input type="radio" name="q0-14" value="na"> Je ne sais pas</label>
+                            </div>
+                        </div>
+
+                        <div class="qcm-item" data-qcm="q0-15">
+                            <p class="qcm-question">15. Que permet GitHub par rapport à Git ?</p>
+                            <div class="qcm-options">
+                                <label><input type="radio" name="q0-15" value="a"> a) Compiler du code Python</label>
+                                <label><input type="radio" name="q0-15" value="b"> b) Héberger les repositories en ligne et collaborer</label>
+                                <label><input type="radio" name="q0-15" value="c"> c) Remplacer complètement Git sur la machine locale</label>
+                                <label class="qcm-na"><input type="radio" name="q0-15" value="na"> Je ne sais pas</label>
+                            </div>
+                        </div>
+
+                        <div class="qcm-item" data-qcm="q0-16">
+                            <p class="qcm-question">16. Qu'est-ce qu'un Pull Request ?</p>
+                            <div class="qcm-options">
+                                <label><input type="radio" name="q0-16" value="a"> a) Une commande pour télécharger du code</label>
+                                <label><input type="radio" name="q0-16" value="b"> b) Une demande pour fusionner les modifications d'une branche dans une autre</label>
+                                <label><input type="radio" name="q0-16" value="c"> c) Un rapport d'erreur automatique</label>
+                                <label class="qcm-na"><input type="radio" name="q0-16" value="na"> Je ne sais pas</label>
+                            </div>
+                        </div>
+
+                        <div class="qcm-item" data-qcm="q0-17">
+                            <p class="qcm-question">17. Que fait la commande <code>git clone</code> ?</p>
+                            <div class="qcm-options">
+                                <label><input type="radio" name="q0-17" value="a"> a) Supprime un repository local</label>
+                                <label><input type="radio" name="q0-17" value="b"> b) Crée une copie locale complète d'un repository distant</label>
+                                <label><input type="radio" name="q0-17" value="c"> c) Fusionne deux branches ensemble</label>
+                                <label class="qcm-na"><input type="radio" name="q0-17" value="na"> Je ne sais pas</label>
+                            </div>
+                        </div>
+
+                        <!-- SECTION D — Docker -->
+                        <h4 class="qcm-section-title">SECTION D — Docker</h4>
+
+                        <div class="qcm-item" data-qcm="q0-18">
+                            <p class="qcm-question">18. Qu'est-ce qu'une image Docker ?</p>
+                            <div class="qcm-options">
+                                <label><input type="radio" name="q0-18" value="a"> a) Un fichier de configuration réseau</label>
+                                <label><input type="radio" name="q0-18" value="b"> b) Un modèle (template) en lecture seule pour créer des conteneurs</label>
+                                <label><input type="radio" name="q0-18" value="c"> c) Un script d'automatisation</label>
+                                <label class="qcm-na"><input type="radio" name="q0-18" value="na"> Je ne sais pas</label>
+                            </div>
+                        </div>
+
+                        <div class="qcm-item" data-qcm="q0-19">
+                            <p class="qcm-question">19. Quelle est la différence principale entre un conteneur Docker et une VM ?</p>
+                            <div class="qcm-options">
+                                <label><input type="radio" name="q0-19" value="a"> a) Le conteneur partage le noyau de l'hôte, la VM a son propre noyau</label>
+                                <label><input type="radio" name="q0-19" value="b"> b) La VM est plus rapide</label>
+                                <label><input type="radio" name="q0-19" value="c"> c) Le conteneur nécessite plus de ressources</label>
+                                <label class="qcm-na"><input type="radio" name="q0-19" value="na"> Je ne sais pas</label>
+                            </div>
+                        </div>
+
+                        <div class="qcm-item" data-qcm="q0-20">
+                            <p class="qcm-question">20. À quoi sert un Dockerfile ?</p>
+                            <div class="qcm-options">
+                                <label><input type="radio" name="q0-20" value="a"> a) Stocker les données d'un conteneur</label>
+                                <label><input type="radio" name="q0-20" value="b"> b) Décrire les instructions pour construire une image Docker</label>
+                                <label><input type="radio" name="q0-20" value="c"> c) Gérer les volumes réseau</label>
+                                <label class="qcm-na"><input type="radio" name="q0-20" value="na"> Je ne sais pas</label>
+                            </div>
+                        </div>
+
+                        <div class="qcm-item" data-qcm="q0-21">
+                            <p class="qcm-question">21. Qu'est-ce que Docker Hub ?</p>
+                            <div class="qcm-options">
+                                <label><input type="radio" name="q0-21" value="a"> a) Un IDE pour Docker</label>
+                                <label><input type="radio" name="q0-21" value="b"> b) Un outil de monitoring de conteneurs</label>
+                                <label><input type="radio" name="q0-21" value="c"> c) Un registre public pour stocker et partager des images Docker</label>
+                                <label class="qcm-na"><input type="radio" name="q0-21" value="na"> Je ne sais pas</label>
+                            </div>
+                        </div>
+
+                        <div class="qcm-item" data-qcm="q0-22">
+                            <p class="qcm-question">22. Qu'est-ce qu'un volume Docker ?</p>
+                            <div class="qcm-options">
+                                <label><input type="radio" name="q0-22" value="a"> a) Un fichier de configuration du conteneur</label>
+                                <label><input type="radio" name="q0-22" value="b"> b) Un mécanisme de stockage persistant partagé entre conteneur et hôte</label>
+                                <label><input type="radio" name="q0-22" value="c"> c) Un type de réseau virtuel</label>
+                                <label class="qcm-na"><input type="radio" name="q0-22" value="na"> Je ne sais pas</label>
+                            </div>
+                        </div>
+
+                        <div class="qcm-item" data-qcm="q0-23">
+                            <p class="qcm-question">23. Quelle commande crée ET démarre un conteneur ?</p>
+                            <div class="qcm-options">
+                                <label><input type="radio" name="q0-23" value="a"> a) docker build</label>
+                                <label><input type="radio" name="q0-23" value="b"> b) docker start</label>
+                                <label><input type="radio" name="q0-23" value="c"> c) docker run</label>
+                                <label class="qcm-na"><input type="radio" name="q0-23" value="na"> Je ne sais pas</label>
+                            </div>
+                        </div>
+
+                        <div class="qcm-item" data-qcm="q0-24">
+                            <p class="qcm-question">24. Pourquoi un conteneur démarre-t-il plus vite qu'une VM ?</p>
+                            <div class="qcm-options">
+                                <label><input type="radio" name="q0-24" value="a"> a) Il n'a pas besoin de démarrer un noyau OS complet</label>
+                                <label><input type="radio" name="q0-24" value="b"> b) Il utilise plus de mémoire RAM</label>
+                                <label><input type="radio" name="q0-24" value="c"> c) Il est compilé en binaire statique</label>
+                                <label class="qcm-na"><input type="radio" name="q0-24" value="na"> Je ne sais pas</label>
+                            </div>
+                        </div>
+
+                        <button class="btn-terminal quiz-submit" data-level="level0">[ SOUMETTRE MES RÉPONSES ]</button>
+                        <p class="quiz-hint" id="quiz-hint-level0"></p>
+                    </div>
+                    <div class="level-complete-banner hidden" id="banner-level0">
+                        🎉 NIVEAU 0 COMPLÉTÉ — Réponses enregistrées
+                        <div class="code-reveal-inline">🔑 Code Niveau 1 : <span class="code-value" id="code-value-level0"></span></div>
+                    </div>
+                </section>
+
+                <!-- ======================================== -->
+                <!-- LEVEL 1 — Analyse des Logs               -->
+                <!-- ======================================== -->
+                <section class="level-content hidden" id="content-level1">
+                    <div class="content-header">
+                        <h2>🔍 NIVEAU 1 — ANALYSE DES LOGS (45 min)</h2>
+                        <div class="classification">DURÉE ESTIMÉE : 45 MINUTES</div>
+                    </div>
+                    <div class="comm-message">
+                        <div class="comm-sender">📨 MSG DE : Analyste de quart</div>
+                        <div class="comm-body">
+                            <p>« On a 6 fichiers de logs des 3 dernières heures. C'est le chaos total. Commencez par le pare-feu et les logs ARP. L'IP de l'attaquant est 185.220.101.47. Une machine de notre réseau interne a été compromise et sert de pivot. Trouvez-la. »</p>
+                        </div>
+                    </div>
+
+                    <div class="objectives-panel" id="objectives-level1">
+                        <div class="objectives-header">
+                            <h3>🎯 OBJECTIFS À VALIDER</h3>
+                            <div class="objectives-progress">
+                                <div class="progress-bar"><div class="progress-fill" id="progress-level1"></div></div>
+                                <span class="progress-text" id="progress-text-level1">0 / 5</span>
+                            </div>
+                        </div>
+                        <p class="objectives-desc">Utilisez le terminal ci-dessous pour analyser les logs. Les objectifs se valident automatiquement.</p>
+                        <div class="objectives-list">
+                            <div class="obj-item" data-obj="l1-attacker"><span class="obj-check">○</span><span class="obj-text">Afficher les lignes de l'IP attaquant dans le pare-feu</span></div>
+                            <div class="obj-item" data-obj="l1-blocked"><span class="obj-check">○</span><span class="obj-text">Compter les ports scannés (BLOCK) par l'attaquant</span></div>
+                            <div class="obj-item" data-obj="l1-icmp"><span class="obj-check">○</span><span class="obj-text">Filtrer les paquets ICMP suspects (tunnel)</span></div>
+                            <div class="obj-item" data-obj="l1-arp"><span class="obj-check">○</span><span class="obj-text">Identifier la MAC suspecte dans arp_poison.log</span></div>
+                            <div class="obj-item" data-obj="l1-scada"><span class="obj-check">○</span><span class="obj-text">Trouver les valeurs falsifiées SCADA</span></div>
+                        </div>
+                        <div class="level-complete-banner hidden" id="banner-level1">
+                            🎉 NIVEAU 1 COMPLÉTÉ — ACCÈS AU NIVEAU 2 DÉVERROUILLÉ
+                            <div class="code-reveal-inline">🔑 Code Niveau 2 : <span class="code-value" id="code-value-level1"></span></div>
+                        </div>
+                    </div>
+
+                    <!-- Compteur de réponses écrites -->
+                    <div class="answers-tracker" id="answers-tracker-level1">
+                        <span>📝 Réponses écrites :</span>
+                        <span class="answers-count" id="answers-count-level1">0 / 20</span>
+                        <small>(toutes les réponses doivent être remplies pour compléter le niveau)</small>
+                    </div>
+
+                    <div class="mission-block">
+                        <h3>🔹 Mission 1.1 — Trouver les connexions de l'attaquant (grep)</h3>
+                        <div class="context-box">
+                            <strong>Contexte :</strong> Le pare-feu bloque normalement tout accès direct depuis Internet. Cherchez l'IP <code>185.220.101.47</code> dans <code>pare_feu.log</code>.
+                        </div>
+                        <div class="question-box">
+                            <p>❓ <strong>Question A :</strong> Écrivez la commande pour afficher toutes les lignes du pare-feu qui mentionnent l'IP de l'attaquant.</p>
+                            <textarea class="level-answer" data-question="m1.1-a" data-level="level1" placeholder="Votre commande et/ou réponse..." rows="2"></textarea>
+                        </div>
+                        <div class="question-box">
+                            <p>❓ <strong>Question B :</strong> Combien de ports a-t-il tenté de scanner au départ (lignes BLOCK) ? Écrivez la commande.</p>
+                            <textarea class="level-answer" data-question="m1.1-b" data-level="level1" placeholder="Votre commande et/ou réponse..." rows="2"></textarea>
+                        </div>
+                        <div class="question-box">
+                            <p>❓ <strong>Question C :</strong> Quels ports a-t-il tenté de scanner ? Écrivez la commande pour extraire les numéros de port uniquement.</p>
+                            <textarea class="level-answer" data-question="m1.1-c" data-level="level1" placeholder="Votre commande et/ou réponse..." rows="2"></textarea>
+                        </div>
+                        <div class="question-box">
+                            <p>❓ <strong>Question D :</strong> Quelles machines internes ont établi des connexions sortantes vers l'attaquant (lignes ALLOW) ? Écrivez la commande.</p>
+                            <textarea class="level-answer" data-question="m1.1-d" data-level="level1" placeholder="Votre commande et/ou réponse..." rows="2"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="mission-block">
+                        <h3>🔹 Mission 1.2 — Détecter le tunnel ICMP (grep + awk)</h3>
+                        <div class="context-box">
+                            <strong>Contexte :</strong> Un ping normal fait 84 octets. Au-delà, c'est un tunnel de données. Analysez <code>icmp_tunnel.log</code>.
+                        </div>
+                        <div class="question-box">
+                            <p>❓ <strong>Question A :</strong> Écrivez la commande pour filtrer uniquement les lignes <code>SUSPECT</code> dans icmp_tunnel.log.</p>
+                            <textarea class="level-answer" data-question="m1.2-a" data-level="level1" placeholder="Votre commande et/ou réponse..." rows="2"></textarea>
+                        </div>
+                        <div class="question-box">
+                            <p>❓ <strong>Question B :</strong> Écrivez la commande pour extraire uniquement les commandes exécutées par l'attaquant via le tunnel.</p>
+                            <textarea class="level-answer" data-question="m1.2-b" data-level="level1" placeholder="Votre commande et/ou réponse..." rows="2"></textarea>
+                        </div>
+                        <div class="question-box">
+                            <p>❓ <strong>Question C :</strong> Quelle différence de taille y a-t-il entre un ping normal et les pings tunnelisés ?</p>
+                            <textarea class="level-answer" data-question="m1.2-c" data-level="level1" placeholder="Votre réponse..." rows="2"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="mission-block">
+                        <h3>🔹 Mission 1.3 — Analyser l'ARP poisoning (grep + awk)</h3>
+                        <div class="context-box">
+                            <strong>Contexte :</strong> L'attaquant a falsifié les tables ARP du réseau CHUM. Cherchez dans <code>arp_poison.log</code>.
+                        </div>
+                        <div class="question-box">
+                            <p>❓ <strong>Question A :</strong> Écrivez la commande pour trouver à quelle heure exacte la table ARP a été corrompue pour la première fois.</p>
+                            <textarea class="level-answer" data-question="m1.3-a" data-level="level1" placeholder="Votre commande et/ou réponse..." rows="2"></textarea>
+                        </div>
+                        <div class="question-box">
+                            <p>❓ <strong>Question B :</strong> Quelle adresse MAC est utilisée par l'attaquant ? Écrivez la commande.</p>
+                            <textarea class="level-answer" data-question="m1.3-b" data-level="level1" placeholder="Votre commande et/ou réponse..." rows="2"></textarea>
+                        </div>
+                        <div class="question-box">
+                            <p>❓ <strong>Question C :</strong> Combien de minutes se sont écoulées entre le début du poisoning et le premier MITM actif ?</p>
+                            <textarea class="level-answer" data-question="m1.3-c" data-level="level1" placeholder="Votre réponse..." rows="2"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="mission-block">
+                        <h3>🔹 Mission 1.4 — Analyser les alertes SCADA (grep + awk + sed)</h3>
+                        <div class="context-box">
+                            <strong>Contexte :</strong> Des valeurs ont été falsifiées dans le système SCADA. Analysez <code>scada_alerte.log</code>.
+                        </div>
+                        <div class="question-box">
+                            <p>❓ <strong>Question A :</strong> Écrivez la commande pour identifier toutes les valeurs falsifiées.</p>
+                            <textarea class="level-answer" data-question="m1.4-a" data-level="level1" placeholder="Votre commande et/ou réponse..." rows="2"></textarea>
+                        </div>
+                        <div class="question-box">
+                            <p>❓ <strong>Question B :</strong> Quelle est la valeur réelle vs la valeur falsifiée pour la tension électrique ?</p>
+                            <textarea class="level-answer" data-question="m1.4-b" data-level="level1" placeholder="Votre réponse..." rows="2"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="mission-block">
+                        <h3>🔹 Mission 1.5 — Timeline complète (grep + sort)</h3>
+                        <div class="context-box">
+                            <strong>Contexte :</strong> Reconstituez la chronologie complète de l'attaque en combinant l'analyse de plusieurs fichiers de logs.
+                        </div>
+                        <div class="question-box">
+                            <p>❓ <strong>Question :</strong> Écrivez une commande combinant <code>grep</code> sur plusieurs fichiers pour reconstituer l'ordre des événements suspects.</p>
+                            <textarea class="level-answer" data-question="m1.5-cmd" data-level="level1" placeholder="Votre commande..." rows="2"></textarea>
+                        </div>
+                        <div class="question-box">
+                            <p>📋 <strong>Tableau de la timeline :</strong> Remplissez les événements correspondant à chaque heure.</p>
+                            <table class="data-table timeline-table">
+                                <thead><tr><th>Heure</th><th>Événement</th></tr></thead>
+                                <tbody>
+                                    <tr><td>21:33</td><td><input type="text" class="level-answer timeline-input" data-question="m1.5-t1" data-level="level1" placeholder="Événement..."></td></tr>
+                                    <tr><td>22:00 – 22:15</td><td><input type="text" class="level-answer timeline-input" data-question="m1.5-t2" data-level="level1" placeholder="Événement..."></td></tr>
+                                    <tr><td>22:10 – 22:11</td><td><input type="text" class="level-answer timeline-input" data-question="m1.5-t3" data-level="level1" placeholder="Événement..."></td></tr>
+                                    <tr><td>22:45 – 22:52</td><td><input type="text" class="level-answer timeline-input" data-question="m1.5-t4" data-level="level1" placeholder="Événement..."></td></tr>
+                                    <tr><td>23:00</td><td><input type="text" class="level-answer timeline-input" data-question="m1.5-t5" data-level="level1" placeholder="Événement..."></td></tr>
+                                    <tr><td>23:58</td><td><input type="text" class="level-answer timeline-input" data-question="m1.5-t6" data-level="level1" placeholder="Événement..."></td></tr>
+                                    <tr><td>23:59</td><td><input type="text" class="level-answer timeline-input" data-question="m1.5-t7" data-level="level1" placeholder="Événement..."></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- TERMINAL NIVEAU 1 -->
+                    <div class="terminal-section">
+                        <h3>💻 Terminal d'analyse</h3>
+                        <p class="terminal-desc">Analysez les fichiers de logs avec les commandes grep, awk, sed, sort.</p>
+                        <div class="instruction-box">
+                            📌 <strong>Instruction :</strong> Pour chaque commande répondant à une question, ajoutez un commentaire à la fin de votre ligne :<br>
+                            <code># mission 1.1 question A</code> &nbsp;ou&nbsp; <code># mission 1.3 question 1</code><br>
+                            Cela permet d'identifier quelle question votre commande adresse.
+                        </div>
+                        <div class="sim-terminal" id="term-level1" data-level="level1">
+                            <div class="sim-header">
+                                <span class="sim-dot red"></span>
+                                <span class="sim-dot yellow"></span>
+                                <span class="sim-dot green"></span>
+                                <span class="sim-title">agent@cert-qc:~/logs_blackout$</span>
+                            </div>
+                            <div class="sim-output"></div>
+                            <div class="sim-input-line">
+                                <span class="sim-prompt">$</span>
+                                <input type="text" class="sim-input" placeholder="Tapez une commande..." spellcheck="false" autocomplete="off">
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ======================================== -->
+                <!-- LEVEL 2 — Réseaux, ARP, ICMP             -->
+                <!-- ======================================== -->
+                <section class="level-content hidden" id="content-level2">
+                    <div class="content-header">
+                        <h2>🌐 NIVEAU 2 — RÉSEAUX, SOUS-RÉSEAUX, ARP ET ICMP (40 min)</h2>
+                        <div class="classification">DURÉE ESTIMÉE : 40 MINUTES</div>
+                    </div>
+                    <div class="comm-message">
+                        <div class="comm-sender">📨 MSG DE : Responsable réseau</div>
+                        <div class="comm-body">
+                            <p>« On a besoin de comprendre l'étendue des dégâts. Quels sous-réseaux sont touchés ? Comment re-segmenter pour isoler le SCADA ? Et ces routes dans notre table de routage — elles ne viennent pas de nous. »</p>
+                        </div>
+                    </div>
+
+                    <div class="objectives-panel" id="objectives-level2">
+                        <div class="objectives-header">
+                            <h3>🎯 OBJECTIFS À VALIDER</h3>
+                            <div class="objectives-progress">
+                                <div class="progress-bar"><div class="progress-fill" id="progress-level2"></div></div>
+                                <span class="progress-text" id="progress-text-level2">0 / 4</span>
+                            </div>
+                        </div>
+                        <p class="objectives-desc">Analysez les routes et les connexions suspectes dans le terminal.</p>
+                        <div class="objectives-list">
+                            <div class="obj-item" data-obj="l2-routes"><span class="obj-check">○</span><span class="obj-text">Trouver les routes injectées dans la table de routage</span></div>
+                            <div class="obj-item" data-obj="l2-pivot"><span class="obj-check">○</span><span class="obj-text">Identifier la machine pivot de l'attaquant</span></div>
+                            <div class="obj-item" data-obj="l2-cmds"><span class="obj-check">○</span><span class="obj-text">Extraire les commandes exécutées via tunnel ICMP</span></div>
+                            <div class="obj-item" data-obj="l2-compromised"><span class="obj-check">○</span><span class="obj-text">Lister les machines internes compromises</span></div>
+                        </div>
+                        <div class="level-complete-banner hidden" id="banner-level2">
+                            🎉 NIVEAU 2 COMPLÉTÉ — ACCÈS AU NIVEAU 3 DÉVERROUILLÉ
+                            <div class="code-reveal-inline">🔑 Code Niveau 3 : <span class="code-value" id="code-value-level2"></span></div>
+                        </div>
+                    </div>
+
+                    <!-- Compteur de réponses écrites -->
+                    <div class="answers-tracker" id="answers-tracker-level2">
+                        <span>📝 Réponses écrites :</span>
+                        <span class="answers-count" id="answers-count-level2">0 / 24</span>
+                        <small>(toutes les réponses doivent être remplies pour compléter le niveau)</small>
+                    </div>
+
+                    <div class="mission-block">
+                        <h3>🔹 Mission 2.1 — Calcul de sous-réseaux (exercice pratique)</h3>
+                        <div class="context-box">
+                            <strong>Exercice :</strong> Pour chaque réseau de la ville, calculez les informations demandées.
+                        </div>
+                        <table class="data-table subnet-table">
+                            <thead><tr><th>Réseau</th><th>CIDR</th><th>Masque</th><th>1re IP hôte</th><th>Dernière IP hôte</th><th>Broadcast</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td>10.100.1.0</td><td>/24</td>
+                                    <td><input type="text" class="level-answer subnet-input" data-question="m2.1-r1-mask" data-level="level2" placeholder="Masque ?"></td>
+                                    <td><input type="text" class="level-answer subnet-input" data-question="m2.1-r1-first" data-level="level2" placeholder="1re IP ?"></td>
+                                    <td><input type="text" class="level-answer subnet-input" data-question="m2.1-r1-last" data-level="level2" placeholder="Dernière IP ?"></td>
+                                    <td><input type="text" class="level-answer subnet-input" data-question="m2.1-r1-bcast" data-level="level2" placeholder="Broadcast ?"></td>
+                                </tr>
+                                <tr>
+                                    <td>10.100.3.0</td><td>/24</td>
+                                    <td><input type="text" class="level-answer subnet-input" data-question="m2.1-r2-mask" data-level="level2" placeholder="Masque ?"></td>
+                                    <td><input type="text" class="level-answer subnet-input" data-question="m2.1-r2-first" data-level="level2" placeholder="1re IP ?"></td>
+                                    <td><input type="text" class="level-answer subnet-input" data-question="m2.1-r2-last" data-level="level2" placeholder="Dernière IP ?"></td>
+                                    <td><input type="text" class="level-answer subnet-input" data-question="m2.1-r2-bcast" data-level="level2" placeholder="Broadcast ?"></td>
+                                </tr>
+                                <tr>
+                                    <td>10.100.0.0</td><td>/16</td>
+                                    <td><input type="text" class="level-answer subnet-input" data-question="m2.1-r3-mask" data-level="level2" placeholder="Masque ?"></td>
+                                    <td><input type="text" class="level-answer subnet-input" data-question="m2.1-r3-first" data-level="level2" placeholder="1re IP ?"></td>
+                                    <td><input type="text" class="level-answer subnet-input" data-question="m2.1-r3-last" data-level="level2" placeholder="Dernière IP ?"></td>
+                                    <td><input type="text" class="level-answer subnet-input" data-question="m2.1-r3-bcast" data-level="level2" placeholder="Broadcast ?"></td>
+                                </tr>
+                                <tr>
+                                    <td>172.16.0.0</td><td>/12</td>
+                                    <td><input type="text" class="level-answer subnet-input" data-question="m2.1-r4-mask" data-level="level2" placeholder="Masque ?"></td>
+                                    <td><input type="text" class="level-answer subnet-input" data-question="m2.1-r4-first" data-level="level2" placeholder="1re IP ?"></td>
+                                    <td><input type="text" class="level-answer subnet-input" data-question="m2.1-r4-last" data-level="level2" placeholder="Dernière IP ?"></td>
+                                    <td><input type="text" class="level-answer subnet-input" data-question="m2.1-r4-bcast" data-level="level2" placeholder="Broadcast ?"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="question-box">
+                            <p>⭐ <strong>Question bonus :</strong> L'adresse <code>10.100.3.200</code> (machine de l'attaquant dans le CHUM) fait-elle partie du réseau <code>10.100.3.0/24</code> ? Justifiez.</p>
+                            <textarea class="level-answer" data-question="m2.1-bonus" data-level="level2" placeholder="Votre justification..." rows="2"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="mission-block">
+                        <h3>🔹 Mission 2.2 — Routes injectées (lecture de table de routage)</h3>
+                        <div class="question-box">
+                            <p>❓ <strong>Question A :</strong> Écrivez la commande pour afficher uniquement les routes suspectes dans <code>table_routage.txt</code>.</p>
+                            <textarea class="level-answer" data-question="m2.2-a" data-level="level2" placeholder="Votre commande..." rows="2"></textarea>
+                        </div>
+                        <div class="question-box">
+                            <p>❓ <strong>Question B :</strong> Vers quelle machine toutes les routes injectées pointent-elles ? Écrivez la commande.</p>
+                            <textarea class="level-answer" data-question="m2.2-b" data-level="level2" placeholder="Votre commande et/ou réponse..." rows="2"></textarea>
+                        </div>
+                        <div class="question-box">
+                            <p>❓ <strong>Question C :</strong> Quels réseaux critiques sont maintenant redirigés vers l'attaquant ?</p>
+                            <textarea class="level-answer" data-question="m2.2-c" data-level="level2" placeholder="Votre réponse..." rows="2"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="mission-block">
+                        <h3>🔹 Mission 2.3 — Analyse des flags TCP dans le pare-feu</h3>
+                        <div class="context-box">
+                            <strong>Rappel du Three-Way Handshake TCP :</strong>
+                            <pre class="code-display" style="margin-top:8px;">Client -> Serveur : SYN      (je veux me connecter)
+Serveur -> Client : SYN-ACK  (OK, je suis prêt)
+Client -> Serveur : ACK      (connexion établie)
+     Ensuite...
+Client -> Serveur : PSH-ACK  (envoi de données)</pre>
+                        </div>
+                        <div class="question-box">
+                            <p>❓ <strong>Question :</strong> Identifiez dans <code>pare_feu.log</code> les connexions où des données sont transmises (flag PSH-ACK) vers l'attaquant. Écrivez la commande.</p>
+                            <textarea class="level-answer" data-question="m2.3-a" data-level="level2" placeholder="Votre commande..." rows="2"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="mission-block">
+                        <h3>🔹 Mission 2.4 — Questions de compréhension (reverse shell)</h3>
+                        <div class="question-box">
+                            <p>❓ <strong>Question 1 :</strong> Quel port est utilisé dans <code>pare_feu.log</code> pour le reverse shell vers <code>10.100.1.88</code> ?</p>
+                            <textarea class="level-answer" data-question="m2.4-1" data-level="level2" placeholder="Votre réponse..." rows="1"></textarea>
+                        </div>
+                        <div class="question-box">
+                            <p>❓ <strong>Question 2 :</strong> Pourquoi l'attaquant utilise-t-il un <strong>reverse shell</strong> (connexion sortante) plutôt qu'une connexion entrante directe ?</p>
+                            <textarea class="level-answer" data-question="m2.4-2" data-level="level2" placeholder="Votre explication..." rows="3"></textarea>
+                        </div>
+                        <div class="question-box">
+                            <p>❓ <strong>Question 3 :</strong> À quelle couche du modèle TCP/IP appartient netcat ?</p>
+                            <textarea class="level-answer" data-question="m2.4-3" data-level="level2" placeholder="Votre réponse..." rows="1"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- TERMINAL NIVEAU 2 -->
+                    <div class="terminal-section">
+                        <h3>💻 Terminal de surveillance réseau</h3>
+                        <p class="terminal-desc">Analysez les routes, connexions et protocoles du réseau de la ville.</p>
+                        <div class="instruction-box">
+                            📌 <strong>Instruction :</strong> Pour chaque commande répondant à une question, ajoutez un commentaire à la fin de votre ligne :<br>
+                            <code># mission 2.2 question A</code> &nbsp;ou&nbsp; <code># mission 2.3 question 1</code><br>
+                            Cela permet d'identifier quelle question votre commande adresse.
+                        </div>
+                        <div class="sim-terminal" id="term-level2" data-level="level2">
+                            <div class="sim-header">
+                                <span class="sim-dot red"></span>
+                                <span class="sim-dot yellow"></span>
+                                <span class="sim-dot green"></span>
+                                <span class="sim-title">agent@cert-qc:~/logs_blackout$</span>
+                            </div>
+                            <div class="sim-output"></div>
+                            <div class="sim-input-line">
+                                <span class="sim-prompt">$</span>
+                                <input type="text" class="sim-input" placeholder="Tapez une commande..." spellcheck="false" autocomplete="off">
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ======================================== -->
+                <!-- LEVEL 3 — Git & Docker Théorie           -->
+                <!-- ======================================== -->
+                <section class="level-content hidden" id="content-level3">
+                    <div class="content-header">
+                        <h2>🐳 NIVEAU 3 — GIT ET DOCKER : THÉORIE ESSENTIELLE (30 min)</h2>
+                        <div class="classification">NIVEAU THÉORIQUE — PAS DE COMMANDES</div>
+                    </div>
+                    <div class="comm-message">
+                        <div class="comm-sender">📨 MSG DE : Commandant CERT-QC</div>
+                        <div class="comm-body">
+                            <p>« Ce niveau est théorique. Comprenez les concepts de Git et Docker — ils expliquent comment l'attaquant s'est propagé via le serveur DevOps 192.168.100.88. Consultez le document distribué par votre commandant. »</p>
+                        </div>
+                    </div>
+
+                    <div class="mission-block">
+                        <h3>🌿 Git — Gestion de versions</h3>
+                        <div class="context-box">
+                            Git permet à des développeurs de travailler ensemble sur le même code sans s'écraser. L'attaquant a compromis le serveur de déploiement et modifié du code déployé automatiquement.
+                        </div>
+                        <table class="data-table">
+                            <thead><tr><th>Concept</th><th>Définition</th></tr></thead>
+                            <tbody>
+                                <tr><td>Repository</td><td>Dossier contenant le code + historique</td></tr>
+                                <tr><td>Commit</td><td>Sauvegarde du code à un instant précis</td></tr>
+                                <tr><td>Branch</td><td>Ligne de travail séparée</td></tr>
+                                <tr><td>Push</td><td>Envoyer ses commits vers le serveur</td></tr>
+                                <tr><td>Pull</td><td>Récupérer les derniers commits</td></tr>
+                                <tr><td>Merge</td><td>Fusionner deux branches</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mission-block">
+                        <h3>🐳 Docker — Conteneurs</h3>
+                        <div class="context-box">
+                            Docker exécute des applications dans des <strong>conteneurs</strong> isolés. Le serveur <code>192.168.100.88</code> avait un conteneur mal configuré avec accès au disque de l'hôte — permettant à l'attaquant de s'échapper.
+                        </div>
+                        <table class="data-table">
+                            <thead><tr><th>Terme</th><th>Définition</th></tr></thead>
+                            <tbody>
+                                <tr><td>Image</td><td>Modèle (recette) pour créer un conteneur</td></tr>
+                                <tr><td>Conteneur</td><td>Instance en cours d'exécution</td></tr>
+                                <tr><td>Dockerfile</td><td>Fichier décrivant la construction</td></tr>
+                                <tr><td>Registry</td><td>Entrepôt d'images (Docker Hub)</td></tr>
+                                <tr><td>Volume</td><td>Dossier partagé conteneur ↔ hôte</td></tr>
+                            </tbody>
+                        </table>
+                        <div class="code-display">
+<pre>Machine Virtuelle           Conteneur Docker
+──────────────────          ────────────────────
+Noyau OS complet            Partage le noyau de l'hôte
+Démarrage en minutes        Démarrage en secondes
+Isolation forte             Isolation plus légère
+500 Mo à 10 Go              50 Mo à 500 Mo</pre>
+                        </div>
+                    </div>
+
+                    <!-- QUIZ LEVEL 3 -->
+                    <div class="quiz-panel qcm-panel" id="quiz-level3">
+                        <h3>📋 QCM — Niveau 3 (Scénario Git & Docker)</h3>
+                        <p class="quiz-desc">Répondez à toutes les questions. Sélectionnez « Je ne sais pas » si nécessaire. Aucun résultat ne sera affiché.</p>
+
+                        <div class="qcm-item" data-qcm="q3-1">
+                            <p class="qcm-question">1. Quelle machine du réseau faisait tourner les conteneurs Docker compromis ?</p>
+                            <div class="qcm-options">
+                                <label><input type="radio" name="q3-1" value="a"> a) 10.100.1.15</label>
+                                <label><input type="radio" name="q3-1" value="b"> b) 185.220.101.47</label>
+                                <label><input type="radio" name="q3-1" value="c"> c) 192.168.100.88</label>
+                                <label><input type="radio" name="q3-1" value="d"> d) 10.100.3.42</label>
+                                <label class="qcm-na"><input type="radio" name="q3-1" value="na"> Je ne sais pas</label>
+                            </div>
+                        </div>
+
+                        <div class="qcm-item" data-qcm="q3-2">
+                            <p class="qcm-question">2. Un <code>git commit</code> sauvegarde le code de manière...</p>
+                            <div class="qcm-options">
+                                <label><input type="radio" name="q3-2" value="a"> a) Distante uniquement (sur GitHub)</label>
+                                <label><input type="radio" name="q3-2" value="b"> b) Locale avant d'être poussée avec git push</label>
+                                <label><input type="radio" name="q3-2" value="c"> c) Automatique sans intervention</label>
+                                <label><input type="radio" name="q3-2" value="d"> d) Temporaire — elle s'efface après 24h</label>
+                                <label class="qcm-na"><input type="radio" name="q3-2" value="na"> Je ne sais pas</label>
+                            </div>
+                        </div>
+
+                        <div class="qcm-item" data-qcm="q3-3">
+                            <p class="qcm-question">3. Un conteneur Docker partage quel composant avec la machine hôte ?</p>
+                            <div class="qcm-options">
+                                <label><input type="radio" name="q3-3" value="a"> a) La carte graphique (GPU)</label>
+                                <label><input type="radio" name="q3-3" value="b"> b) L'écran et le clavier</label>
+                                <label><input type="radio" name="q3-3" value="c"> c) Le noyau (kernel) du système d'exploitation</label>
+                                <label><input type="radio" name="q3-3" value="d"> d) Le disque dur complet</label>
+                                <label class="qcm-na"><input type="radio" name="q3-3" value="na"> Je ne sais pas</label>
+                            </div>
+                        </div>
+
+                        <div class="qcm-item" data-qcm="q3-4">
+                            <p class="qcm-question">4. Comment l'attaquant a-t-il exploité le conteneur Docker mal configuré ?</p>
+                            <div class="qcm-options">
+                                <label><input type="radio" name="q3-4" value="a"> a) Via un volume monté donnant accès au disque de l'hôte</label>
+                                <label><input type="radio" name="q3-4" value="b"> b) En redémarrant le serveur physique</label>
+                                <label><input type="radio" name="q3-4" value="c"> c) En changeant l'image Docker sur Docker Hub</label>
+                                <label><input type="radio" name="q3-4" value="d"> d) En supprimant le Dockerfile</label>
+                                <label class="qcm-na"><input type="radio" name="q3-4" value="na"> Je ne sais pas</label>
+                            </div>
+                        </div>
+
+                        <div class="qcm-item" data-qcm="q3-5">
+                            <p class="qcm-question">5. Quelle commande Git permet de voir l'historique des modifications ?</p>
+                            <div class="qcm-options">
+                                <label><input type="radio" name="q3-5" value="a"> a) git status</label>
+                                <label><input type="radio" name="q3-5" value="b"> b) git log</label>
+                                <label><input type="radio" name="q3-5" value="c"> c) git diff</label>
+                                <label><input type="radio" name="q3-5" value="d"> d) git init</label>
+                                <label class="qcm-na"><input type="radio" name="q3-5" value="na"> Je ne sais pas</label>
+                            </div>
+                        </div>
+
+                        <button class="btn-terminal quiz-submit" data-level="level3">[ SOUMETTRE MES RÉPONSES ]</button>
+                        <p class="quiz-hint" id="quiz-hint-level3"></p>
+                    </div>
+                    <div class="level-complete-banner hidden" id="banner-level3">
+                        🎉 NIVEAU 3 COMPLÉTÉ
+                        <div class="code-reveal-inline">🔑 Code Niveau 4 : <span class="code-value" id="code-value-level3"></span></div>
+                    </div>
+                </section>
+
+                <!-- ======================================== -->
+                <!-- LEVEL 4 — Décodage Hex + DNS              -->
+                <!-- ======================================== -->
+                <section class="level-content hidden" id="content-level4">
+                    <div class="content-header">
+                        <h2>🔢 NIVEAU 4 — DÉCODAGE HEXADÉCIMAL ET DNS TUNNELING (30 min)</h2>
+                        <div class="classification">DURÉE ESTIMÉE : 30 MINUTES</div>
+                    </div>
+                    <div class="comm-message">
+                        <div class="comm-sender">📨 MSG DE : Analyste réseau</div>
+                        <div class="comm-body">
+                            <p>« On a trouvé des requêtes DNS très bizarres. Les noms de domaines sont remplis de chiffres et de lettres a à f. C'est de l'hexadécimal. L'attaquant envoie des messages codés dans des requêtes DNS normales. On a besoin que vous les décodiez. »</p>
+                        </div>
+                    </div>
+
+                    <div class="objectives-panel" id="objectives-level4">
+                        <div class="objectives-header">
+                            <h3>🎯 OBJECTIFS À VALIDER</h3>
+                            <div class="objectives-progress">
+                                <div class="progress-bar"><div class="progress-fill" id="progress-level4"></div></div>
+                                <span class="progress-text" id="progress-text-level4">0 / 3</span>
+                            </div>
+                        </div>
+                        <p class="objectives-desc">Analysez les requêtes DNS et décodez les données hexadécimales.</p>
+                        <div class="objectives-list">
+                            <div class="obj-item" data-obj="l4-dns"><span class="obj-check">○</span><span class="obj-text">Filtrer les requêtes DNS suspectes (DNS-TUNNEL)</span></div>
+                            <div class="obj-item" data-obj="l4-sources"><span class="obj-check">○</span><span class="obj-text">Identifier les machines sources des requêtes tunnel</span></div>
+                            <div class="obj-item" data-obj="l4-hex"><span class="obj-check">○</span><span class="obj-text">Extraire les sous-domaines hex des requêtes DNS</span></div>
+                        </div>
+                        <div class="level-complete-banner hidden" id="banner-level4">
+                            🎉 NIVEAU 4 COMPLÉTÉ — ACCÈS AU NIVEAU 5 DÉVERROUILLÉ
+                            <div class="code-reveal-inline">🔑 Code Niveau 5 : <span class="code-value" id="code-value-level4"></span></div>
+                        </div>
+                    </div>
+
+                    <div class="mission-block">
+                        <h3>🔢 Rappel : Hexadécimal (base 16)</h3>
+                        <div class="context-box">
+                            Chaque octet = 2 chiffres hex. Le mot <code>root</code> en hex = <code>726f6f74</code>.
+                        </div>
+                        <div class="code-display">
+<pre>Caractère | ASCII (déc) | Hex
+r         | 114         | 72
+o         | 111         | 6f
+o         | 111         | 6f
+t         | 116         | 74
+
+Décoder : python3 -c "print(bytes.fromhex('726f6f74').decode())"</pre>
+                        </div>
+                    </div>
+
+                    <!-- Compteur de réponses écrites -->
+                    <div class="answers-tracker" id="answers-tracker-level4">
+                        <span>📝 Réponses écrites :</span>
+                        <span class="answers-count" id="answers-count-level4">0 / 10</span>
+                        <small>(toutes les réponses doivent être remplies pour compléter le niveau)</small>
+                    </div>
+
+                    <div class="mission-block">
+                        <h3>🔹 Mission 4.1 — Identifier les requêtes DNS suspectes</h3>
+                        <div class="question-box">
+                            <p>❓ <strong>Question A :</strong> Écrivez la commande pour afficher toutes les requêtes suspectes vers le domaine C2 de l'attaquant.</p>
+                            <textarea class="level-answer" data-question="m4.1-a" data-level="level4" placeholder="Votre commande..." rows="2"></textarea>
+                        </div>
+                        <div class="question-box">
+                            <p>❓ <strong>Question B :</strong> Combien de requêtes normales vs suspectes y a-t-il ? Écrivez les commandes.</p>
+                            <textarea class="level-answer" data-question="m4.1-b" data-level="level4" placeholder="Vos commandes..." rows="2"></textarea>
+                        </div>
+                        <div class="question-box">
+                            <p>❓ <strong>Question C :</strong> Depuis quelles machines internes partent les requêtes DNS suspectes ? Écrivez la commande.</p>
+                            <textarea class="level-answer" data-question="m4.1-c" data-level="level4" placeholder="Votre commande..." rows="2"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="mission-block">
+                        <h3>🔹 Mission 4.2 — Extraire et décoder les sous-domaines hexadécimaux</h3>
+                        <div class="question-box">
+                            <p>❓ <strong>Question A :</strong> Écrivez la commande pour extraire uniquement les sous-domaines hexadécimaux (la partie avant <code>.blackout-c2.xyz</code>).</p>
+                            <textarea class="level-answer" data-question="m4.2-a" data-level="level4" placeholder="Votre commande..." rows="2"></textarea>
+                        </div>
+                        <div class="question-box">
+                            <p>❓ <strong>Question B :</strong> Décodez les chaînes hexadécimales suivantes en texte lisible (à la main ou avec Python) :</p>
+                            <table class="data-table subnet-table">
+                                <thead><tr><th>Chaîne hex</th><th>Texte décodé</th></tr></thead>
+                                <tbody>
+                                    <tr><td><code>726f6f74</code></td><td><input type="text" class="level-answer subnet-input" data-question="m4.2-hex1" data-level="level4" placeholder="Texte décodé ?"></td></tr>
+                                    <tr><td><code>70617373776f7264</code></td><td><input type="text" class="level-answer subnet-input" data-question="m4.2-hex2" data-level="level4" placeholder="Texte décodé ?"></td></tr>
+                                    <tr><td><code>2f6574632f736861646f77</code></td><td><input type="text" class="level-answer subnet-input" data-question="m4.2-hex3" data-level="level4" placeholder="Texte décodé ?"></td></tr>
+                                    <tr><td><code>676974687562</code></td><td><input type="text" class="level-answer subnet-input" data-question="m4.2-hex4" data-level="level4" placeholder="Texte décodé ?"></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="mission-block">
+                        <h3>🔹 Mission 4.3 — Exercice de conversion hex ↔ binaire</h3>
+                        <div class="context-box">
+                            <strong>Rappel :</strong> 1 chiffre hex = 4 bits
+                            <table class="data-table" style="margin-top:8px;">
+                                <thead><tr><th>Hex</th><th>0</th><th>7</th><th>2</th><th>a</th><th>f</th></tr></thead>
+                                <tbody><tr><td><strong>Binaire</strong></td><td>0000</td><td>0111</td><td>0010</td><td>1010</td><td>1111</td></tr></tbody>
+                            </table>
+                        </div>
+                        <div class="question-box">
+                            <p>❓ <strong>Question :</strong> Convertissez le premier octet du mot <code>root</code> (<code>72</code> en hex) en binaire. Détaillez votre calcul.</p>
+                            <textarea class="level-answer" data-question="m4.3-binaire" data-level="level4" placeholder="Votre calcul détaillé..." rows="3"></textarea>
+                        </div>
+                        <div class="question-box">
+                            <p>⭐ <strong>Question bonus :</strong> Donnez 3 exemples concrets d'utilisation de la notation hexadécimale dans la vie courante en réseau/informatique.</p>
+                            <textarea class="level-answer" data-question="m4.3-bonus" data-level="level4" placeholder="Vos 3 exemples..." rows="3"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- TERMINAL NIVEAU 4 -->
+                    <div class="terminal-section">
+                        <h3>💻 Terminal d'analyse DNS</h3>
+                        <p class="terminal-desc">Analysez les requêtes DNS et identifiez les données exfiltrées.</p>
+                        <div class="instruction-box">
+                            📌 <strong>Instruction :</strong> Pour chaque commande répondant à une question, ajoutez un commentaire à la fin de votre ligne :<br>
+                            <code># mission 4.1 question A</code> &nbsp;ou&nbsp; <code># mission 4.2 question 1</code><br>
+                            Cela permet d'identifier quelle question votre commande adresse.
+                        </div>
+                        <div class="sim-terminal" id="term-level4" data-level="level4">
+                            <div class="sim-header">
+                                <span class="sim-dot red"></span>
+                                <span class="sim-dot yellow"></span>
+                                <span class="sim-dot green"></span>
+                                <span class="sim-title">agent@cert-qc:~/logs_blackout$</span>
+                            </div>
+                            <div class="sim-output"></div>
+                            <div class="sim-input-line">
+                                <span class="sim-prompt">$</span>
+                                <input type="text" class="sim-input" placeholder="Tapez une commande..." spellcheck="false" autocomplete="off">
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ======================================== -->
+                <!-- LEVEL 5 — Scripts de Défense              -->
+                <!-- ======================================== -->
+                <section class="level-content hidden" id="content-level5">
+                    <div class="content-header">
+                        <h2>🛡️ NIVEAU 5 — SCRIPTS DE DÉFENSE (45 min)</h2>
+                        <div class="classification">DURÉE ESTIMÉE : 45 MINUTES</div>
+                    </div>
+                    <div class="comm-message urgent">
+                        <div class="comm-sender">🚨 MSG URGENT DE : Direction CSIVM</div>
+                        <div class="comm-body">
+                            <p>« On a besoin d'outils maintenant. Trois scripts à produire. Pour chaque script, la structure de base est fournie — complétez les parties manquantes. Ces outils seront déployés ce soir même. »</p>
+                        </div>
+                    </div>
+
+                    <div class="objectives-panel" id="objectives-level5">
+                        <div class="objectives-header">
+                            <h3>🎯 OBJECTIFS À VALIDER</h3>
+                            <div class="objectives-progress">
+                                <div class="progress-bar"><div class="progress-fill" id="progress-level5"></div></div>
+                                <span class="progress-text" id="progress-text-level5">0 / 3</span>
+                            </div>
+                        </div>
+                        <p class="objectives-desc">Prouvez votre maîtrise des commandes dans le terminal avant d'écrire vos scripts.</p>
+                        <div class="objectives-list">
+                            <div class="obj-item" data-obj="l5-extract"><span class="obj-check">○</span><span class="obj-text">Extraire les IPs suspectes avec leur fréquence</span></div>
+                            <div class="obj-item" data-obj="l5-ports"><span class="obj-check">○</span><span class="obj-text">Lister les ports suspects (SERVICE=UNKNOWN ou non standard)</span></div>
+                            <div class="obj-item" data-obj="l5-scada"><span class="obj-check">○</span><span class="obj-text">Filtrer les alertes SCADA critiques ou danger</span></div>
+                        </div>
+                        <div class="level-complete-banner hidden" id="banner-level5">
+                            🎉 NIVEAU 5 COMPLÉTÉ — ACCÈS AU NIVEAU 6 DÉVERROUILLÉ
+                            <div class="code-reveal-inline">🔑 Code Niveau 6 : <span class="code-value" id="code-value-level5"></span></div>
+                        </div>
+                    </div>
+
+                    <!-- Compteur de réponses écrites -->
+                    <div class="answers-tracker" id="answers-tracker-level5">
+                        <span>📝 Réponses écrites :</span>
+                        <span class="answers-count" id="answers-count-level5">0 / 6</span>
+                        <small>(toutes les réponses doivent être remplies pour compléter le niveau)</small>
+                    </div>
+
+                    <div class="mission-block">
+                        <h3>🔹 Mission 5.1 — Script Bash : Détecteur d'IP (<code>detecteur_ip.sh</code>) — 5 pts</h3>
+                        <div class="context-box">
+                            <strong>Consigne :</strong> Écrire un script bash qui prend un fichier de log en paramètre, trouve les IP <strong>externes</strong> (hors 10.x, 192.168.x, 172.x) et affiche leur fréquence.
+                        </div>
+                        <div class="requirements-box">
+                            <p><strong>Le script doit :</strong></p>
+                            <ul>
+                                <li>Vérifier qu'un paramètre est donné (sinon afficher l'usage)</li>
+                                <li>Extraire toutes les IP du fichier avec <code>grep -oE</code></li>
+                                <li>Exclure les IP privées (RFC 1918) avec <code>grep -v</code></li>
+                                <li>Compter les occurrences avec <code>sort | uniq -c | sort -rn</code></li>
+                            </ul>
+                        </div>
+                        <div class="question-box">
+                            <p>❓ <strong>Question 1 :</strong> À quoi sert <code>grep -oE</code> ? Quelle différence avec <code>grep</code> seul ?</p>
+                            <textarea class="level-answer" data-question="m5.1-q1" data-level="level5" placeholder="Votre explication..." rows="2"></textarea>
+                        </div>
+                        <div class="question-box">
+                            <p>❓ <strong>Question 2 :</strong> Que fait <code>uniq -c</code> ?</p>
+                            <textarea class="level-answer" data-question="m5.1-q2" data-level="level5" placeholder="Votre explication..." rows="2"></textarea>
+                        </div>
+                        <div class="question-box">
+                            <p>❓ <strong>Question 3 :</strong> Pourquoi exclut-on les IP commençant par <code>10.</code>, <code>192.168.</code> et <code>172.</code> ?</p>
+                            <textarea class="level-answer" data-question="m5.1-q3" data-level="level5" placeholder="Votre explication..." rows="2"></textarea>
+                        </div>
+                        <div class="question-box">
+                            <p>📝 <strong>Écrivez le script complet :</strong></p>
+                            <textarea class="level-answer" data-question="m5.1-script" data-level="level5" placeholder="#!/bin/bash&#10;# detecteur_ip.sh&#10;..." rows="12" style="font-family: 'JetBrains Mono', 'Fira Code', monospace;"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="mission-block">
+                        <h3>🔹 Mission 5.2 — Script Bash : Isolation d'urgence (<code>isolation.sh</code>) — 5 pts</h3>
+                        <div class="context-box">
+                            <strong>Consigne :</strong> Script qui prend une IP en paramètre et génère les règles <code>iptables</code> pour bloquer une machine compromise et supprimer les routes injectées.
+                        </div>
+                        <div class="requirements-box">
+                            <p><strong>Le script doit :</strong></p>
+                            <ul>
+                                <li>Prendre l'IP de la machine compromise en paramètre</li>
+                                <li>Générer les règles <code>iptables</code> pour bloquer le trafic entrant/sortant/forward</li>
+                                <li>Bloquer les ports C2 connus (4444, 9001, 9999)</li>
+                                <li>Afficher les commandes pour supprimer les routes injectées</li>
+                            </ul>
+                        </div>
+                        <div class="question-box">
+                            <p>📝 <strong>Écrivez le script complet :</strong></p>
+                            <textarea class="level-answer" data-question="m5.2-script" data-level="level5" placeholder="#!/bin/bash&#10;# isolation.sh&#10;..." rows="12" style="font-family: 'JetBrains Mono', 'Fira Code', monospace;"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="mission-block">
+                        <h3>🔹 Mission 5.3 — Script Python : Analyse ARP (<code>analyse_arp.py</code>) — 5 pts</h3>
+                        <div class="context-box">
+                            <strong>Consigne :</strong> Script Python qui lit <code>arp_poison.log</code> et produit un résumé : types d'événements, MAC suspectes, machines victimes et durée de l'attaque.
+                        </div>
+                        <div class="requirements-box">
+                            <p><strong>Le script doit :</strong></p>
+                            <ul>
+                                <li>Ouvrir et lire <code>logs_blackout/arp_poison.log</code></li>
+                                <li>Ignorer les commentaires (lignes commençant par <code>#</code>)</li>
+                                <li>Compter les différents types d'événements ARP</li>
+                                <li>Identifier les adresses MAC suspectes (commençant par <code>DE:</code>)</li>
+                                <li>Lister les machines victimes du MITM</li>
+                                <li>Afficher le verdict : poisoning confirmé ou non</li>
+                            </ul>
+                        </div>
+                        <div class="question-box">
+                            <p>📝 <strong>Écrivez le script complet :</strong></p>
+                            <textarea class="level-answer" data-question="m5.3-script" data-level="level5" placeholder="#!/usr/bin/env python3&#10;# analyse_arp.py&#10;..." rows="15" style="font-family: 'JetBrains Mono', 'Fira Code', monospace;"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- TERMINAL NIVEAU 5 -->
+                    <div class="terminal-section">
+                        <h3>💻 Terminal de développement</h3>
+                        <p class="terminal-desc">Testez vos commandes avant d'écrire vos scripts.</p>
+                        <div class="instruction-box">
+                            📌 <strong>Instruction :</strong> Pour chaque commande répondant à une question, ajoutez un commentaire à la fin de votre ligne :<br>
+                            <code># mission 5.1 question 1</code> &nbsp;ou&nbsp; <code># mission 5.2 question 1</code><br>
+                            Cela permet d'identifier quelle question votre commande adresse.
+                        </div>
+                        <div class="sim-terminal" id="term-level5" data-level="level5">
+                            <div class="sim-header">
+                                <span class="sim-dot red"></span>
+                                <span class="sim-dot yellow"></span>
+                                <span class="sim-dot green"></span>
+                                <span class="sim-title">agent@cert-qc:~/logs_blackout$</span>
+                            </div>
+                            <div class="sim-output"></div>
+                            <div class="sim-input-line">
+                                <span class="sim-prompt">$</span>
+                                <input type="text" class="sim-input" placeholder="Tapez une commande..." spellcheck="false" autocomplete="off">
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ======================================== -->
+                <!-- LEVEL 6 — Rapport Final                   -->
+                <!-- ======================================== -->
+                <section class="level-content hidden" id="content-level6">
+                    <div class="content-header">
+                        <h2>📝 NIVEAU 6 — RAPPORT FINAL ET RÉSULTATS (20 min)</h2>
+                        <div class="classification">DURÉE ESTIMÉE : 20 MINUTES</div>
+                    </div>
+                    <div class="comm-message success">
+                        <div class="comm-sender">📨 MSG DE : Commandant CERT-QC</div>
+                        <div class="comm-body">
+                            <p>« La menace est sous contrôle grâce à votre travail. Il nous faut maintenant un rapport officiel d'incident pour la Direction de la Ville de Montréal. Ensuite, vous recevrez vos résultats QCM et un PDF récapitulatif de l'examen. »</p>
+                        </div>
+                    </div>
+
+                    <div class="mission-block">
+                        <h3>🔹 Mission Finale — Rapport d'incident (25 pts)</h3>
+                        <div class="context-box">
+                            <strong>Consigne :</strong> Rédigez un rapport d'incident répondant aux 5 sections ci-dessous. Chaque section vaut <strong>5 points</strong>.
+                        </div>
+
+                        <!-- Grille d'évaluation -->
+                        <table class="data-table" style="margin-bottom: 20px;">
+                            <thead><tr><th>Critère</th><th>Points</th><th>Description</th></tr></thead>
+                            <tbody>
+                                <tr><td><strong>QUI</strong> a attaqué</td><td>5 pts</td><td>IP, méthode d'entrée initiale</td></tr>
+                                <tr><td><strong>COMMENT</strong> propagation</td><td>5 pts</td><td>Protocoles exploités (ICMP, ARP, DNS, routes)</td></tr>
+                                <tr><td><strong>QUOI</strong> actions réalisées</td><td>5 pts</td><td>Scan, exfiltration, MITM, manipulation SCADA</td></tr>
+                                <tr><td><strong>IMPACT</strong> potentiel</td><td>5 pts</td><td>Conséquences sans intervention</td></tr>
+                                <tr><td><strong>SOLUTIONS</strong> proposées</td><td>5 pts</td><td>5 mesures concrètes, réalistes et pertinentes</td></tr>
+                            </tbody>
+                        </table>
+
+                        <!-- Compteur de réponses écrites -->
+                        <div class="answers-tracker" id="answers-tracker-level6">
+                            <span>📝 Réponses écrites :</span>
+                            <span class="answers-count" id="answers-count-level6">0 / 5</span>
+                            <small>(toutes les sections doivent être remplies pour soumettre)</small>
+                        </div>
+
+                        <div class="report-form">
+                            <label>RAPPORT D'INCIDENT — OPÉRATION BLACKOUT-Ω — CLASSIFICATION : SECRET</label>
+
+                            <div class="question-box">
+                                <p>📝 <strong>1. QUI a attaqué ?</strong> (IP, méthode d'entrée)</p>
+                                <textarea class="level-answer report-section" data-question="rapport-qui" data-level="level6" id="report-qui" placeholder="L'attaque provient de l'IP..." rows="4"></textarea>
+                            </div>
+
+                            <div class="question-box">
+                                <p>📝 <strong>2. COMMENT l'attaquant s'est-il propagé ?</strong> (protocoles exploités)</p>
+                                <textarea class="level-answer report-section" data-question="rapport-comment" data-level="level6" id="report-comment-section" placeholder="Propagation multi-protocole : tunnel ICMP, ARP poisoning..." rows="5"></textarea>
+                            </div>
+
+                            <div class="question-box">
+                                <p>📝 <strong>3. QUOI : qu'a fait l'attaquant une fois à l'intérieur ?</strong></p>
+                                <textarea class="level-answer report-section" data-question="rapport-quoi" data-level="level6" id="report-quoi" placeholder="L'attaquant a exécuté des commandes à distance..." rows="5"></textarea>
+                            </div>
+
+                            <div class="question-box">
+                                <p>📝 <strong>4. IMPACT : conséquences potentielles sans intervention</strong></p>
+                                <textarea class="level-answer report-section" data-question="rapport-impact" data-level="level6" id="report-impact" placeholder="Sans intervention : coupure électrique..." rows="4"></textarea>
+                            </div>
+
+                            <div class="question-box">
+                                <p>📝 <strong>5. SOLUTIONS : 5 mesures concrètes pour éviter la prochaine attaque</strong></p>
+                                <textarea class="level-answer report-section" data-question="rapport-solutions" data-level="level6" id="report-solutions" placeholder="1. Isoler immédiatement...&#10;2. ...&#10;3. ...&#10;4. ...&#10;5. ..." rows="6"></textarea>
+                            </div>
+
+                            <div class="comment-section">
+                                <label>COMMENTAIRE POUR L'EXERCICE ET LE PROF (optionnel)</label>
+                                <textarea id="report-comment" placeholder="Vos remarques sur l'exercice, difficultés rencontrées, suggestions..." rows="4"></textarea>
+                            </div>
+                            <div class="report-footer">
+                                <span id="report-chars">0 / 5 sections remplies</span>
+                                <button class="btn-terminal" id="btn-submit-report">[ SOUMETTRE LE RAPPORT ET TERMINER L'EXAMEN ]</button>
+                            </div>
+                        </div>
+                    </div>
+
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- FIN EXAMEN CONFIRMATION OVERLAY -->
+    <div id="overlay-fin-examen" class="fin-examen-overlay hidden">
+        <div class="fin-examen-modal">
+            <h2>🚪 FIN DE L'EXAMEN</h2>
+            <p>Êtes-vous sûr de vouloir terminer l'examen ?</p>
+            <ul class="fin-examen-list">
+                <li>📄 Un <strong>PDF récapitulatif</strong> sera généré automatiquement avec toutes vos réponses et votre note QCM.</li>
+                <li>🔒 Votre session sera <strong>déconnectée</strong> et vous ne pourrez plus modifier vos réponses.</li>
+            </ul>
+            <p class="fin-examen-warning">⚠️ Cette action est <strong>irréversible</strong>.</p>
+            <div class="fin-examen-actions">
+                <button class="btn-terminal btn-fin-cancel" id="btn-fin-cancel">[ ANNULER ]</button>
+                <button class="btn-terminal btn-fin-confirm" id="btn-fin-confirm">[ CONFIRMER — TERMINER L'EXAMEN ]</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATIONS -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- GAME OVER OVERLAY -->
+    <div id="screen-gameover" class="gameover-overlay hidden">
+        <div class="gameover-rain" id="gameover-rain"></div>
+        <div class="gameover-content">
+            <pre class="skull-ascii" id="skull-ascii"></pre>
+            <h1 class="gameover-title">SYSTÈMES COMPROMIS</h1>
+            <p class="gameover-subtitle">Le groupe VANTABLACK a pris le contrôle de Montréal.<br>Temps écoulé — mission échouée.</p>
+            <button class="gameover-btn" id="btn-restart">↻ RECOMMENCER LA MISSION</button>
+        </div>
+    </div>
+
+    <!-- FILE VIEWER OVERLAY -->
+    <div id="file-viewer-overlay" class="file-viewer-overlay hidden">
+        <div class="file-viewer">
+            <div class="file-viewer-header">
+                <div class="file-viewer-dots">
+                    <span class="sim-dot red"></span>
+                    <span class="sim-dot yellow"></span>
+                    <span class="sim-dot green"></span>
+                </div>
+                <span class="file-viewer-title" id="file-viewer-title">fichier.log</span>
+                <button class="file-viewer-close" id="file-viewer-close">✕</button>
+            </div>
+            <pre class="file-viewer-content" id="file-viewer-content"></pre>
+        </div>
+    </div>
+
+    <!-- BARÈME OVERLAY -->
+    <div id="overlay-bareme" class="info-overlay hidden">
+        <div class="info-overlay-panel">
+            <div class="info-overlay-header">
+                <h2>📊 BARÈME DE L'EXAMEN — 100 POINTS</h2>
+                <button class="info-overlay-close" data-close="overlay-bareme">✕</button>
+            </div>
+            <div class="info-overlay-body">
+                <div class="bareme-container">
+                    <table class="bareme-table">
+                        <thead>
+                            <tr><th>Niveau</th><th>Contenu</th><th>Type</th><th>Points</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="bareme-level">0</span></td>
+                                <td>Théorie — Réseaux, Adressage IP, Git, Docker</td>
+                                <td>QCM + Tableau</td>
+                                <td class="bareme-pts">20 pts</td>
+                            </tr>
+                            <tr>
+                                <td><span class="bareme-level">1</span></td>
+                                <td>Analyse des logs — Pare-feu, ICMP, ARP, SCADA</td>
+                                <td>Terminal (grep, awk, sed)</td>
+                                <td class="bareme-pts">10 pts</td>
+                            </tr>
+                            <tr>
+                                <td><span class="bareme-level">2</span></td>
+                                <td>Analyse réseau — Routes, ARP, connexions</td>
+                                <td>Terminal (grep, awk)</td>
+                                <td class="bareme-pts">10 pts</td>
+                            </tr>
+                            <tr>
+                                <td><span class="bareme-level">3</span></td>
+                                <td>Scénario Git &amp; Docker</td>
+                                <td>QCM</td>
+                                <td class="bareme-pts">5 pts</td>
+                            </tr>
+                            <tr>
+                                <td><span class="bareme-level">4</span></td>
+                                <td>Décodage hexadécimal &amp; DNS tunneling</td>
+                                <td>Terminal + exercices</td>
+                                <td class="bareme-pts">15 pts</td>
+                            </tr>
+                            <tr>
+                                <td><span class="bareme-level">5</span></td>
+                                <td>Scripts de défense — Bash &amp; Python</td>
+                                <td>Terminal + scripts</td>
+                                <td class="bareme-pts">15 pts</td>
+                            </tr>
+                            <tr>
+                                <td><span class="bareme-level">6</span></td>
+                                <td>Rapport d'incident final</td>
+                                <td>Rédaction</td>
+                                <td class="bareme-pts">25 pts</td>
+                            </tr>
+                            <tr class="bareme-total-row">
+                                <td colspan="3"><strong>TOTAL</strong></td>
+                                <td class="bareme-pts"><strong>100 pts</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="bareme-note">
+                        <p>⚠️ <strong>Note :</strong> Les niveaux QCM (0 et 3) sont corrigés automatiquement. Les autres niveaux seront évalués par le professeur à partir du PDF récapitulatif et de vos réponses terminales.</p>
+                        <p>📄 Le PDF généré en fin d'examen contient toutes vos réponses QCM et votre rapport.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTEXTE OVERLAY -->
+    <div id="overlay-contexte" class="info-overlay hidden">
+        <div class="info-overlay-panel">
+            <div class="info-overlay-header">
+                <h2>📖 CONTEXTE — OPÉRATION BLACKOUT-Ω</h2>
+                <button class="info-overlay-close" data-close="overlay-contexte">✕</button>
+            </div>
+            <div class="info-overlay-body">
+                <div class="context-narrative">
+                    <div class="narrative-date">📅 14 mars 2026, 23h58 — Montréal, Québec</div>
+                    <p>Une alerte silencieuse se déclenche dans les serveurs du <strong>Centre de Sécurité Informatique de la Ville de Montréal (CSIVM)</strong>. Pas de bruit. Pas d'explosion. Juste des chiffres qui changent imperceptiblement dans les systèmes de contrôle du réseau électrique.</p>
+                    <p><strong>Ce n'est pas un accident.</strong></p>
+                    <p>Le groupe <span class="highlight-red">VANTABLACK</span> — une unité de hackers liée à un État hostile — s'est infiltré discrètement dans le réseau de la ville il y a <strong>72 heures</strong>. Depuis, ils ont cartographié les sous-réseaux, empoisonné les tables ARP, transmis des données cachées dans des pings ICMP, et encodé des messages secrets dans des requêtes DNS en hexadécimal.</p>
+                    <p class="highlight-line">⚡ Ce soir, ils passent à l'exécution.</p>
+                    <div class="targets-grid">
+                        <div class="target-card"><span class="target-icon">⚡</span><strong>Réseau SCADA</strong><br>Contrôle du réseau électrique — coupure imminente</div>
+                        <div class="target-card"><span class="target-icon">🏥</span><strong>Réseau CHUM</strong><br>Systèmes de support vital hospitalier</div>
+                        <div class="target-card"><span class="target-icon">💧</span><strong>Usine Jean-R. Marcotte</strong><br>Traitement des eaux — manipulation des dosages</div>
+                        <div class="target-card"><span class="target-icon">🚦</span><strong>Contrôle du trafic</strong><br>Paralysie des intersections intelligentes</div>
+                    </div>
+                    <p>Vous êtes l'équipe <strong>CERT-QC</strong> (Computer Emergency Response Team — Québec). Vous avez été réveillés à minuit. Les prochaines heures décideront si Montréal passe la nuit.</p>
+                    <p>La mission est divisée en <strong>6 niveaux</strong>. Chaque niveau déverrouille un fragment de vérité.</p>
+                    <p class="narrative-ending">🔴 Bonne chance. On en a besoin.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- INFORMATION UTILE OVERLAY -->
+    <div id="overlay-info-utile" class="info-overlay hidden">
+        <div class="info-overlay-panel info-overlay-wide">
+            <div class="info-overlay-header">
+                <h2>📚 INFORMATIONS UTILES — RÉFÉRENCE</h2>
+                <button class="info-overlay-close" data-close="overlay-info-utile">✕</button>
+            </div>
+            <div class="info-overlay-body">
+
+                <div class="info-section">
+                    <h3>📐 Architecture Réseau de la Ville</h3>
+<pre class="info-code-block">
+INTERNET (Zone hostile)
+│
+│   185.220.101.47  ← IP de l'attaquant
+│
+▼
+╔══════════════════════════════════════════════╗
+║  PARE-FEU PÉRIMÉTRIQUE                      ║
+║  Interface WAN : 132.207.88.1               ║
+╚══════════════════════════════════════════════╝
+│
+├─── DMZ : 172.16.0.0/12  (serveurs publics)
+│         172.16.1.100  — Site web ville
+│         172.16.2.10   — Serveur mail
+│
+├─── RÉSEAU DEVOPS : 192.168.100.0/24
+│         192.168.100.10  — Serveur de déploiement
+│         192.168.100.88  ← Machine compromise (pivot)
+│
+└─── RÉSEAU INTERNE VILLE : 10.100.0.0/16
+          │
+          ├── 10.100.1.0/24  — Administration centrale
+          │       10.100.1.1   — Routeur admin
+          │       10.100.1.88  ← Poste infecté (mouvement latéral)
+          │
+          ├── 10.100.2.0/24  — Réseau SCADA (contrôle électrique)
+          │       10.100.2.50  — Automate PLC-01
+          │       10.100.2.51  — Automate PLC-02
+          │       10.100.2.100 — Superviseur SCADA
+          │
+          ├── 10.100.3.0/24  — Réseau CHUM (hôpital)
+          │       10.100.3.20  — Serveur dossiers patients
+          │       10.100.3.55  — Contrôleur support vital
+          │       10.100.3.200 ← Serveur compromis (ARP poisoning)
+          │
+          └── 10.100.4.0/24  — Usine traitement des eaux
+                  10.100.4.30  — PLC dosage chlore
+</pre>
+                </div>
+
+                <div class="info-section">
+                    <h3>🧑‍🏫 Durée et Étapes</h3>
+                    <table class="info-table">
+                        <thead><tr><th>Étape</th><th>Durée</th><th>Contenu</th></tr></thead>
+                        <tbody>
+                            <tr><td>Introduction + simulation</td><td>15 min</td><td>Scénario, distribution des fichiers</td></tr>
+                            <tr><td>Niveau 0 — Théorie réseau</td><td>25 min</td><td>OSI, TCP/IP, ARP, ICMP</td></tr>
+                            <tr><td>Niveau 1 — Analyse des logs</td><td>45 min</td><td>grep, awk, sed, sort</td></tr>
+                            <tr><td>Niveau 2 — Réseaux et ARP</td><td>40 min</td><td>Subnetting, analyse réseau</td></tr>
+                            <tr><td>☕ Pause</td><td>15 min</td><td></td></tr>
+                            <tr><td>Niveau 3 — Git et Docker</td><td>30 min</td><td>Concepts de base</td></tr>
+                            <tr><td>Niveau 4 — Décodage hex + DNS</td><td>30 min</td><td>Hex ↔ ASCII, DNS tunneling</td></tr>
+                            <tr><td>Niveau 5 — Scripts de défense</td><td>45 min</td><td>Bash + Python guidés</td></tr>
+                            <tr><td>Niveau 6 — Rapport final</td><td>20 min</td><td>Synthèse et correction</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="info-section">
+                    <h3>🛠️ Aide-mémoire Commandes</h3>
+                    <div class="info-columns">
+                        <div class="info-col">
+                            <h4>Recherche (grep)</h4>
+<pre class="info-code-block info-code-sm">grep "motif" fichier
+grep -i "motif" fichier      # insensible à la casse
+grep -c "motif" fichier      # compter les occurrences
+grep -v "motif" fichier      # exclure le motif
+grep -E "mot1|mot2" fichier  # regex étendue
+grep -o "motif" fichier      # afficher seulement le match</pre>
+                        </div>
+                        <div class="info-col">
+                            <h4>Extraction (awk / sed)</h4>
+<pre class="info-code-block info-code-sm">awk '{print $1}' fichier     # 1ère colonne
+awk '{print $3, $5}' fichier # colonnes 3 et 5
+sed 's/ancien/nouveau/' fich # substitution
+sed 's/[^0-9]//g' fichier    # garder que les chiffres</pre>
+                        </div>
+                        <div class="info-col">
+                            <h4>Tri et comptage</h4>
+<pre class="info-code-block info-code-sm">sort fichier                # tri alphabétique
+sort -n fichier             # tri numérique
+sort -u fichier             # tri + dédoublonnage
+uniq -c                     # compter les doublons
+wc -l fichier               # nombre de lignes</pre>
+                        </div>
+                        <div class="info-col">
+                            <h4>Affichage sélectif</h4>
+<pre class="info-code-block info-code-sm">head -n 10 fichier          # 10 premières lignes
+tail -n 5 fichier           # 5 dernières lignes
+cat fichier                 # tout le fichier
+cat fichier | commande      # pipeline (chaîner)</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h3>🔑 Protocoles Clés — Résumé Rapide</h3>
+                    <table class="info-table">
+                        <thead><tr><th>Protocole</th><th>Couche OSI</th><th>Fonction</th><th>Attaque connue</th></tr></thead>
+                        <tbody>
+                            <tr><td>ARP</td><td>2 — Liaison</td><td>Résolution IP → MAC</td><td>ARP Poisoning (MITM)</td></tr>
+                            <tr><td>ICMP</td><td>3 — Réseau</td><td>Diagnostic (ping)</td><td>ICMP Tunneling (exfiltration)</td></tr>
+                            <tr><td>DNS</td><td>7 — Application</td><td>Résolution nom → IP</td><td>DNS Tunneling (hex encoding)</td></tr>
+                            <tr><td>TCP</td><td>4 — Transport</td><td>Connexions fiables</td><td>SYN Flood, port scan</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="info-section">
+                    <h3>🔢 Tableau Hexadécimal ↔ ASCII</h3>
+<pre class="info-code-block info-code-sm">Hex:   41 42 43 44 45 46 47 48 49 4A 4B 4C 4D
+ASCII:  A  B  C  D  E  F  G  H  I  J  K  L  M
+
+Hex:   4E 4F 50 51 52 53 54 55 56 57 58 59 5A
+ASCII:  N  O  P  Q  R  S  T  U  V  W  X  Y  Z
+
+Hex:   61 62 63 64 65 66 67 68 69 6A 6B 6C 6D
+ASCII:  a  b  c  d  e  f  g  h  i  j  k  l  m
+
+Hex:   30 31 32 33 34 35 36 37 38 39
+ASCII:  0  1  2  3  4  5  6  7  8  9
+
+Hex:   20=espace  2E=.  2F=/  3A=:  2D=-  5F=_</pre>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="js/jspdf.umd.min.js"></script>
+    <script src="js/typewriter.js"></script>
+    <script src="js/timer.js"></script>
+    <script src="js/terminal.js"></script>
+    <script src="js/app.js"></script>
+
+</body>
+</html>
