@@ -636,11 +636,8 @@ function completeLevel(level) {
         showToast('SYSTÈME', '🎉 Niveau complété ! Code généré pour ' + nextName + '.', false);
     }
 
-    // Disable text answer fields for this level (read-only after completion)
-    document.querySelectorAll(`.level-answer[data-level="${level}"]`).forEach(ta => {
-        ta.disabled = true;
-        ta.style.opacity = '0.7';
-    });
+    // NOTE: text inputs are NOT disabled on completion — students can keep editing
+    // Answers are saved continuously via saveTextAnswers() on every input event
 }
 
 // ── TEXT ANSWERS (terminal levels) ────────────────────────
@@ -710,10 +707,19 @@ function setupTextAnswers() {
 }
 
 function tryCompleteFromTextAnswers(level) {
-    // Check if objectives are all done
+    // Level 6 has its own explicit submission via submitReport() — never auto-complete
+    if (level === 'level6') return;
+
+    // Already completed — nothing to do
+    if (state.completedLevels.includes(level)) return;
+
+    // Terminal levels MUST have all objectives validated
     if (typeof LEVEL_OBJECTIVES !== 'undefined' && LEVEL_OBJECTIVES[level]) {
         const allObjDone = Object.values(LEVEL_OBJECTIVES[level].objectives).every(o => o.validated);
         if (!allObjDone) return; // not ready yet
+    } else {
+        // No objectives defined for this level — don't auto-complete from text alone
+        return;
     }
 
     // Check text answers
@@ -1745,11 +1751,7 @@ function restoreSavedUI() {
             if (codeEl && state.generatedCodes[level]) {
                 codeEl.textContent = state.generatedCodes[level];
             }
-            // Disable text answers for completed levels
-            document.querySelectorAll(`.level-answer[data-level="${level}"]`).forEach(ta => {
-                ta.disabled = true;
-                ta.style.opacity = '0.7';
-            });
+            // NOTE: text inputs are NOT disabled — students can keep editing after completion
         }
     });
 
