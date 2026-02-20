@@ -1778,7 +1778,81 @@ cat fichier | commande      # pipeline (chaîner)</pre>
                 </div>
 
                 <div class="info-section">
-                    <h3>🔢 Tableau Hexadécimal ↔ ASCII</h3>
+                    <h3>� Pare-feu Linux — iptables</h3>
+                    <div class="info-columns">
+                        <div class="info-col">
+                            <h4>Structure d'une règle</h4>
+<pre class="info-code-block info-code-sm">iptables -A &lt;CHAÎNE&gt; [options] -j &lt;ACTION&gt;
+
+Chaînes :
+  INPUT    → trafic entrant (vers cette machine)
+  OUTPUT   → trafic sortant (depuis cette machine)
+  FORWARD  → trafic qui traverse (routeur/passerelle)
+
+Actions :
+  ACCEPT   → autoriser le paquet
+  DROP     → bloquer silencieusement
+  REJECT   → bloquer + envoyer réponse d'erreur
+  LOG      → journaliser dans syslog</pre>
+                        </div>
+                        <div class="info-col">
+                            <h4>Options courantes</h4>
+<pre class="info-code-block info-code-sm">-s 185.220.101.47    # IP source
+-d 10.100.2.0/24     # IP destination
+-p tcp               # protocole (tcp, udp, icmp)
+--dport 22           # port destination
+--sport 4444         # port source
+-i eth0              # interface d'entrée
+-o eth1              # interface de sortie
+-m state --state NEW # suivi de connexion</pre>
+                        </div>
+                        <div class="info-col">
+                            <h4>Exemples pratiques</h4>
+<pre class="info-code-block info-code-sm"># Bloquer une IP attaquante
+iptables -A INPUT -s 185.220.101.47 -j DROP
+
+# Bloquer un port suspect
+iptables -A INPUT -p tcp --dport 4444 -j DROP
+
+# Autoriser SSH uniquement depuis le LAN
+iptables -A INPUT -p tcp --dport 22 -s 10.100.0.0/16 -j ACCEPT
+
+# Bloquer tout ICMP (anti-tunnel)
+iptables -A INPUT -p icmp -j DROP
+
+# Isoler le réseau SCADA
+iptables -A FORWARD -d 10.100.2.0/24 -j DROP
+
+# Voir les règles actives
+iptables -L -n -v
+
+# Sauvegarder les règles
+iptables-save > /etc/iptables/rules.v4</pre>
+                        </div>
+                        <div class="info-col">
+                            <h4>Ordre des règles</h4>
+<pre class="info-code-block info-code-sm"># ⚠️ L'ORDRE COMPTE ! Première règle qui
+# matche → appliquée, les suivantes ignorées.
+
+# Bonne pratique :
+# 1. Autoriser le trafic légitime
+iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+
+# 2. Bloquer tout le reste
+iptables -A INPUT -j DROP
+
+# Insérer au début (position 1) :
+iptables -I INPUT 1 -s 10.100.1.0/24 -j ACCEPT
+
+# Supprimer une règle :
+iptables -D INPUT -s 185.220.101.47 -j DROP</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h3>�🔢 Tableau Hexadécimal ↔ ASCII</h3>
 <pre class="info-code-block info-code-sm">Hex:   41 42 43 44 45 46 47 48 49 4A 4B 4C 4D
 ASCII:  A  B  C  D  E  F  G  H  I  J  K  L  M
 
